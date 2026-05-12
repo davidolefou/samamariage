@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 const MODULES = [
   { emoji: '💰', label: 'Budget IA', href: '/app/budget', available: true },
-  { emoji: '🎁', label: 'Ndawtal', href: '/app/ndawtal', available: false },
+  { emoji: '🎁', label: 'Ndawtal', href: '/app/ndawtal', available: true },
   { emoji: '📋', label: 'Planning', href: '/app/planning', available: false },
   { emoji: '🏪', label: 'Prestataires', href: '/app/prestataires', available: false },
   { emoji: '👥', label: 'Invités', href: '/app/invites', available: false },
