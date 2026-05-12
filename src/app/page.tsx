@@ -501,7 +501,7 @@ export default function HomePage() {
                   { icon: <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="9" r="3" /><path d="M5 21c0-4 3-7 7-7s7 3 7 7" /></svg>, title: 'Coordinatrice certifiée sur place', desc: 'Une pro Sama Mariage à Dakar, dédiée à ton mariage. Recrutée, formée, garantie.' },
                 ].map((item, i) => (
                   <li key={i} className="flex gap-4">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl" style={{ background: '#D4A574', color: '#0E2916' }}>{item.icon}</div>
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full" style={{ background: '#D4A574', color: '#0E2916' }}>{item.icon}</div>
                     <div>
                       <div className="font-display text-xl">{item.title}</div>
                       <p className="text-sm mt-0.5" style={{ color: 'rgba(247,233,207,.75)' }}>{item.desc}</p>
@@ -510,7 +510,7 @@ export default function HomePage() {
                 ))}
               </ul>
 
-              <Link href="/onboarding" className="reveal d4 mt-10 inline-flex items-center gap-2 rounded-full px-6 py-4 text-[15px] font-medium transition" style={{ background: '#D4A574', color: '#3D181C' }}>
+              <Link href="/onboarding" className="reveal d4 mt-10 inline-flex items-center gap-2 rounded-full px-6 py-4 text-[15px] font-medium transition hover:bg-[#D4A574]/10" style={{ border: '1.5px solid #D4A574', color: '#D4A574' }}>
                 Découvrir Sama Diaspora
                 <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h12M11 5l5 5-5 5" /></svg>
               </Link>
