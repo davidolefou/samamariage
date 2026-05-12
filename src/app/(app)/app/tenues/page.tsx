@@ -48,6 +48,63 @@ export default function TenuesPage() {
 
   return (
     <>
+      <style>{`
+        .look-card { transition: transform .25s, box-shadow .25s; }
+        .look-card:hover { transform: translateY(-2px); }
+        .look-takk  { background: radial-gradient(120% 100% at 30% 10%, #D4A574 0%, #722F37 55%, #3D181C 100%); }
+        .look-ceet  { background: linear-gradient(180deg, #F4E4C1 0%, #D4A574 60%, #B98548 100%); }
+        .look-recep { background: radial-gradient(140% 100% at 70% 70%, #1E5631 0%, #173F24 50%, #0E2916 100%); }
+      `}</style>
+
+      {/* Tes 3 looks */}
+      <section className="mb-7">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display text-xl" style={{ color: '#0E2916' }}>Tes 3 looks</h2>
+          <span className="text-[11px] uppercase tracking-widest" style={{ fontFamily: 'var(--font-jetbrains)', color: 'rgba(61,61,61,.5)' }}>essayages programmés</span>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-3">
+          {[
+            {
+              cls: 'look-takk', label: 'tenue takk · bazin',
+              date: 'Takk · 12 déc', name: 'Bazin riche brodé or',
+              status: '✓ confirmée', statusStyle: { background: '#EAF1EC', color: '#1E5631' },
+              sub: 'Essayage 2 · J-15', link: 'Voir →', linkColor: '#1E5631',
+            },
+            {
+              cls: 'look-ceet', label: 'tenue céet · boubou',
+              date: 'Céet · 13 déc', name: 'Boubou ivoire & cuivre',
+              status: 'en cours', statusStyle: { background: '#FBF4EA', color: '#B98548' },
+              sub: 'Essayage 1 · J-32', link: 'Voir →', linkColor: '#1E5631',
+            },
+            {
+              cls: 'look-recep', label: 'réception · robe',
+              date: 'Réception · 15 déc', name: 'Robe blanche & voile or',
+              status: 'à choisir', statusStyle: { background: 'rgba(114,47,55,.1)', color: '#722F37' },
+              sub: "Pas d'essayage prévu", link: 'Choisir →', linkColor: '#722F37',
+            },
+          ].map(look => (
+            <article key={look.cls} className="look-card relative rounded-3xl overflow-hidden shadow-card ring-1 ring-black/5">
+              <div className={`${look.cls}`} style={{ aspectRatio: '3/4', position: 'relative' }}>
+                <span className="absolute bottom-3 left-3 text-[10px] uppercase tracking-widest font-mono text-white/70">{look.label}</span>
+              </div>
+              <div className="p-4 bg-[#FAF7F2]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-widest mb-0.5" style={{ fontFamily: 'var(--font-jetbrains)', color: '#722F37' }}>{look.date}</div>
+                    <h3 className="font-display text-lg" style={{ color: '#0E2916' }}>{look.name}</h3>
+                  </div>
+                  <span className="rounded-full px-2.5 py-1 text-[10px] font-medium shrink-0 ml-2" style={look.statusStyle}>{look.status}</span>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-[12px]">
+                  <span style={{ color: 'rgba(61,61,61,.55)' }}>{look.sub}</span>
+                  <button className="font-medium hover:opacity-75 transition" style={{ color: look.linkColor }}>{look.link}</button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[

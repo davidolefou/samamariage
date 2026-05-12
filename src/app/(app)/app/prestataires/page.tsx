@@ -143,38 +143,55 @@ export default function PrestatairesPage() {
         </>
       ) : (
         /* Explorer tab */
-        <div className="rounded-2xl overflow-hidden ring-1" style={{ background: 'linear-gradient(135deg, #0E2916, #1E5631)', outlineColor: 'rgba(212,165,116,.2)' }}>
-          <div className="p-8 text-center text-[#F7E9CF]">
-            <div className="text-5xl mb-4">🔍</div>
-            <h3 className="font-display text-3xl mb-2">Explorer les prestataires</h3>
-            <p className="text-sm mb-8 max-w-md mx-auto" style={{ color: 'rgba(247,233,207,.75)' }}>
-              500+ prestataires vérifiés à Dakar, Saint-Louis, Thiès. Photographes, traiteurs, DJs, décorateurs, tailleurs — tous notés par des mariées SamaMariage.
-            </p>
-
-            <div className="grid sm:grid-cols-3 gap-3 mb-8 max-w-lg mx-auto">
+        <>
+          <style>{`
+            .cat-tile { transition: transform .25s, box-shadow .25s; }
+            .cat-tile:hover { transform: translateY(-2px); box-shadow: 0 18px 38px -16px rgba(30,86,49,.35); }
+            .cat-tile[aria-pressed="true"] { box-shadow: 0 0 0 2px #1E5631, 0 18px 38px -16px rgba(30,86,49,.35); }
+          `}</style>
+          <div className="mb-5">
+            <h2 className="font-display text-xl mb-3" style={{ color: '#0E2916' }}>Découverte</h2>
+            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2.5">
               {[
-                { icon: '📸', label: '87 photographes', sub: 'À partir de 350 000 F' },
-                { icon: '🍽️', label: '45 traiteurs', sub: 'Tous styles de cuisine' },
-                { icon: '🎵', label: '120 DJs & orchestres', sub: 'Afro, mbalax, RnB' },
-              ].map(item => (
-                <div key={item.label} className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,.1)' }}>
-                  <div className="text-2xl mb-2">{item.icon}</div>
-                  <div className="text-sm font-medium" style={{ color: '#F7E9CF' }}>{item.label}</div>
-                  <div className="text-[11px]" style={{ color: 'rgba(247,233,207,.6)' }}>{item.sub}</div>
-                </div>
+                { id: 'photo',   icon: '📸', label: 'Photo',     count: 87 },
+                { id: 'food',    icon: '🍽️', label: 'Traiteur',  count: 62 },
+                { id: 'decor',   icon: '💐', label: 'Déco',      count: 48 },
+                { id: 'salle',   icon: '🏛️', label: 'Salle',     count: 35 },
+                { id: 'dj',      icon: '🎵', label: 'DJ',        count: 41 },
+                { id: 'tenue',   icon: '👗', label: 'Tenue',     count: 73 },
+                { id: 'voiture', icon: '🚗', label: 'Voiture',   count: 18 },
+                { id: 'anim',    icon: '🎤', label: 'Animation', count: 24 },
+              ].map(cat => (
+                <button key={cat.id}
+                  onClick={() => toast.info(`${cat.label} — ${cat.count} prestataires · disponible prochainement`)}
+                  className="cat-tile rounded-2xl bg-white p-3 sm:p-4 text-left ring-1 ring-black/5 shadow-card"
+                  aria-pressed="false">
+                  <div className="text-2xl mb-2">{cat.icon}</div>
+                  <div className="text-[13px] font-medium leading-tight" style={{ color: '#0E2916' }}>{cat.label}</div>
+                  <div className="text-[10px] mt-1" style={{ fontFamily: 'var(--font-jetbrains)', color: 'rgba(61,61,61,.5)' }}>{cat.count}</div>
+                </button>
               ))}
             </div>
-
-            <button
-              onClick={() => toast.info('Annuaire disponible prochainement !')}
-              className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium hover:opacity-90 transition"
-              style={{ background: '#D4A574', color: '#3D181C' }}
-            >
-              Explorer l&apos;annuaire
-              <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h12M11 5l5 5-5 5"/></svg>
-            </button>
           </div>
-        </div>
+
+          <div className="rounded-2xl overflow-hidden ring-1" style={{ background: 'linear-gradient(135deg, #0E2916, #1E5631)', outlineColor: 'rgba(212,165,116,.2)' }}>
+            <div className="p-8 text-center text-[#F7E9CF]">
+              <div className="text-5xl mb-4">🔍</div>
+              <h3 className="font-display text-3xl mb-2">500+ prestataires vérifiés</h3>
+              <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: 'rgba(247,233,207,.75)' }}>
+                Dakar, Saint-Louis, Thiès — tous notés par des mariées SamaMariage. Réponse garantie sous 24h.
+              </p>
+              <button
+                onClick={() => toast.info('Annuaire disponible prochainement !')}
+                className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium hover:opacity-90 transition"
+                style={{ background: '#D4A574', color: '#3D181C' }}
+              >
+                Explorer l&apos;annuaire
+                <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h12M11 5l5 5-5 5"/></svg>
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </>
   )
