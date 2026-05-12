@@ -266,3 +266,12 @@ input[type=range].sama::-moz-range-thumb { height: 24px; width: 24px; border-rad
 /* Donut chart */
 .donut .seg { transition: stroke-width .25s ease; transform-origin: center; }
 .donut:hover .seg { stroke-width: 22; }
+.bseg { transition: stroke-dashoffset 1.1s cubic-bezier(.2,.7,.2,1); }
+
+/* Task rows */
+.task-row { transition: background-color .2s ease; }
+.task-row:hover { background: rgba(250,247,242,.6); }
+.task-row.done .task-title { text-decoration: line-through; opacity: .45; }
+
+/* Budget category segments (hover) */
+.bseg:hover { filter: brightness(1.12); }

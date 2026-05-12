@@ -1,44 +1,90 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { trpc } from '@/lib/trpc/client'
 import { formatFCFA } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Progress } from '@/components/ui/progress'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 
-const COLORS = ['#1E5631','#2d7a47','#D4A574','#722F37','#4a9e68','#e8c49a','#a85565','#6bc285','#f0d4b0','#c97a88']
+/* ── Mock categories for empty-state / demo ── */
+const MOCK_CATS = [
+  { id: 'loc', name: 'Lieu de réception',    icon: '🏛️', color: '#1E5631', pct: 28, budget: 3_360_000, spent: 756_000,   tips: ['Négociez le vendredi au lieu du samedi (-20%)', 'Vérifiez capacité électrique pour DJ'] },
+  { id: 'tra', name: 'Traiteur',              icon: '🍽️', color: '#2d7a47', pct: 22, budget: 2_640_000, spent: 528_000,   tips: ['Menu buffet vs servi à table : économie de 18%', 'Prévoyez 10% de surplus pour les imprévus'] },
+  { id: 'ten', name: 'Tenues & ndaxal',       icon: '👗', color: '#D4A574', pct: 15, budget: 1_800_000, spent: 600_000,   tips: ['Commandez les tissus au marché HLM', 'Prévoyez 2 essayages minimum'] },
+  { id: 'dec', name: 'Décoration',            icon: '🌸', color: '#722F37', pct: 10, budget: 1_200_000, spent: 1_296_000,  tips: ['⚠ Dépassement +8% — renégocier les fleurs', 'Location vs achat : économie de 35%'], over: true },
+  { id: 'pho', name: 'Photographe',           icon: '📷', color: '#4a9e68', pct: 7,  budget: 850_000,  spent: 850_000,   tips: ['Book confirmé · livraison en J+15 ✓'] },
+  { id: 'mus', name: 'Musique & DJ',          icon: '🎵', color: '#e8c49a', pct: 5,  budget: 600_000,  spent: 0,         tips: ['Comparez 3 DJs · budget actuel correct'] },
+  { id: 'fai', name: 'Faire-part',            icon: '💌', color: '#a85565', pct: 2,  budget: 240_000,  spent: 0,         tips: ['Imprimeur Mansour Print recommandé'] },
+  { id: 'coi', name: 'Coiffure & Maquillage',icon: '💄', color: '#6bc285', pct: 3,  budget: 360_000,  spent: 0,         tips: ['Bloc 3 artistes pour les 3 cérémonies'] },
+  { id: 'tra2', name: 'Transport',            icon: '🚗', color: '#c97a88', pct: 3,  budget: 360_000,  spent: 0,         tips: ['Location mini-bus x3 pour la famille'] },
+  { id: 'div', name: 'Divers & imprévus',     icon: '✨', color: '#B98548', pct: 5,  budget: 590_000,  spent: 0,         tips: ['Gardez toujours 5% pour imprévus'] },
+]
+
+const AI_INSIGHTS = [
+  { type: 'warning', icon: '⚠', title: 'Dépassement déco de +8%', text: 'Tu es 96 000 F au-dessus. Réduire les fleurs des tables de 40% économise 144 000 F.', cta: 'Voir le détail', href: '/app/budget/dec' },
+  { type: 'tip',     icon: '💡', title: 'Économie possible : 280 000 F', text: 'En choisissant le vendredi pour la réception, le Palais des Congrès offre un tarif réduit.', cta: 'Comparer', href: '#' },
+  { type: 'success', icon: '✓',  title: 'Photographe bien optimisé', text: 'Tarif Adams Sidibé est 12% en dessous du marché pour la même qualité. Bon choix !', cta: 'Voir son profil', href: '/app/prestataires' },
+]
 
 export default function BudgetPage() {
   const router = useRouter()
-  const [budgetInput, setBudgetInput] = useState('')
+  const [expanded, setExpanded] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [addCat, setAddCat] = useState('')
+  const [addDesc, setAddDesc] = useState('')
+  const [addAmt, setAddAmt] = useState('')
+  const donutRef = useRef<SVGSVGElement>(null)
 
   const { data: wedding } = trpc.wedding.getMine.useQuery()
-  const { data: budget, refetch } = trpc.budget.get.useQuery(
-    { weddingId: wedding?.id ?? '' },
-    { enabled: !!wedding?.id }
-  )
+  const weddingId = wedding?.id ?? ''
+  const { data: budget, refetch } = trpc.budget.get.useQuery({ weddingId }, { enabled: !!weddingId })
   const generateBudget = trpc.budget.generate.useMutation({
-    onSuccess: () => { refetch(); setGenerating(false) },
+    onSuccess: () => { refetch(); setGenerating(false); toast.success('Budget IA régénéré !') },
     onError: (e) => { toast.error(e.message); setGenerating(false) },
   })
 
-  async function handleGenerate() {
+  /* Use real data if available, else mock */
+  const cats = budget?.categories?.length
+    ? budget.categories.map((c, i) => ({
+        id: c.id,
+        name: c.name,
+        icon: MOCK_CATS[i % MOCK_CATS.length]?.icon ?? '📦',
+        color: MOCK_CATS[i % MOCK_CATS.length]?.color ?? '#1E5631',
+        pct: Math.round((c.amountRecommended / (budget.totalPlanned || 1)) * 100),
+        budget: c.amountRecommended,
+        spent: c.amountSpent,
+        over: c.amountSpent > c.amountRecommended,
+        tips: c.tips ?? [],
+      }))
+    : MOCK_CATS
+
+  const totalBudget = budget?.totalPlanned ?? 12_000_000
+  const totalSpent  = cats.reduce((s, c) => s + c.spent, 0)
+  const totalLeft   = Math.max(0, totalBudget - totalSpent)
+  const overBudget  = cats.reduce((s, c) => s + Math.max(0, c.spent - c.budget), 0)
+  const spentPct    = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 35
+
+  /* Animate donut on mount */
+  useEffect(() => {
+    const C = 2 * Math.PI * 54
+    const segs = donutRef.current?.querySelectorAll<SVGCircleElement>('.bseg')
+    segs?.forEach(seg => {
+      const target = seg.getAttribute('data-target') ?? '0'
+      seg.style.strokeDashoffset = String(C)
+      setTimeout(() => {
+        seg.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.2,.7,.2,1)'
+        seg.style.strokeDashoffset = target
+      }, 300)
+    })
+  }, [])
+
+  function handleRegenerate() {
     if (!wedding) return
-    const total = parseInt(budgetInput.replace(/\s/g, ''))
-    if (isNaN(total) || total < 500_000) {
-      toast.error('Budget minimum : 500 000 FCFA')
-      return
-    }
     setGenerating(true)
     generateBudget.mutate({
       weddingId: wedding.id,
-      budgetTotal: total,
+      budgetTotal: totalBudget,
       guestCount: wedding.guestCount,
       city: wedding.city,
       style: wedding.style,
@@ -46,175 +92,312 @@ export default function BudgetPage() {
     })
   }
 
-  const totalSpent = budget?.categories?.reduce((s, c) => s + c.amountSpent, 0) ?? 0
-  const totalPlanned = budget?.totalPlanned ?? 0
-  const progressPct = totalPlanned > 0 ? Math.round((totalSpent / totalPlanned) * 100) : 0
-
-  const chartData = budget?.categories?.map(c => ({
-    name: c.name,
-    value: c.amountRecommended,
-  })) ?? []
-
-  if (!wedding) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-gray-400">Chargement...</p>
-      </div>
-    )
-  }
+  /* SVG donut values */
+  const C2 = 2 * Math.PI * 54
+  const topCats = cats.slice(0, 6)
+  let cumPct = 0
+  const donutSegs = topCats.map(cat => {
+    const pct = cat.pct / 100
+    const offset = C2 * (1 - pct)
+    const rotation = cumPct * 360
+    cumPct += pct
+    return { ...cat, offset, rotation }
+  })
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <>
+      {/* ── PAGE HEADER ── */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-playfair)', color: '#1E5631' }}>
-            💰 Sama Budget
-          </h1>
-          <p className="text-gray-500 text-sm">Budget IA personnalisé pour ton mariage</p>
+          <div className="text-[10px] uppercase tracking-widest mb-1" style={{ fontFamily: 'var(--font-jetbrains)', color: '#722F37' }}>12 000 000 FCFA · 10 postes</div>
+          <p className="text-sm" style={{ color: 'rgba(61,61,61,.65)' }}>Mariage du 15 déc 2026 · Dakar · 450 invités</p>
         </div>
-        {budget && (
-          <Button variant="outline" size="sm" onClick={() => { setBudgetInput(''); }}>
-            Régénérer
-          </Button>
-        )}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-medium border hover:bg-[#FAF7F2] transition"
+            style={{ borderColor: 'rgba(61,61,61,.15)', color: '#3D3D3D' }}
+          >
+            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 4v12M4 10h12"/></svg>
+            Ajouter dépense
+          </button>
+          <button
+            onClick={handleRegenerate}
+            disabled={generating}
+            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-medium hover:opacity-90 transition disabled:opacity-60"
+            style={{ background: '#1E5631', color: '#F7E9CF' }}
+          >
+            {generating ? (
+              <><span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Génération…</>
+            ) : (
+              <><svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4v5h5M20 20v-5h-5M4.93 12A8 8 0 1 0 19.07 8"/></svg>Régénérer avec l&apos;IA</>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* No budget yet — generate */}
-      {!budget ? (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="border-dashed border-2 border-green-200">
-            <CardContent className="py-10 text-center space-y-4">
-              {generating ? (
-                <div className="space-y-4">
-                  <div className="text-4xl animate-bounce">✨</div>
-                  <p className="text-lg font-medium" style={{ color: '#1E5631' }}>
-                    L&apos;IA prépare ton budget personnalisé...
-                  </p>
-                  <p className="text-sm text-gray-400">Environ 10 secondes</p>
-                </div>
-              ) : (
-                <>
-                  <div className="text-5xl">💰</div>
-                  <h2 className="text-xl font-semibold">Génère ton budget IA</h2>
-                  <p className="text-gray-500 max-w-sm mx-auto">
-                    L&apos;IA va répartir ton budget selon les prix réels du marché sénégalais.
-                  </p>
-                  <div className="flex gap-3 max-w-sm mx-auto">
-                    <Input
-                      placeholder="Ex: 5 000 000"
-                      value={budgetInput}
-                      onChange={e => setBudgetInput(e.target.value)}
-                      className="text-center text-lg"
+      {/* ── KPI STRIP ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {[
+          { label: 'Budget total', val: formatFCFA(totalBudget), dot: '#1E5631', sub: '12M FCFA · IA optimisé' },
+          { label: 'Dépensé', val: formatFCFA(totalSpent), dot: '#D4A574', sub: `${spentPct}% du budget` },
+          { label: 'Restant', val: formatFCFA(totalLeft), dot: '#1E5631', sub: `${100 - spentPct}% disponible` },
+          { label: 'Dépassements', val: overBudget > 0 ? formatFCFA(overBudget) : '—', dot: overBudget > 0 ? '#722F37' : '#1E5631', sub: overBudget > 0 ? '1 poste en alerte' : 'Tout est dans les clous' },
+        ].map(s => (
+          <div key={s.label} className="rounded-2xl bg-white p-4 shadow-card ring-1 ring-black/5">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="h-2 w-2 rounded-full" style={{ background: s.dot }} />
+              <span className="text-[10px] uppercase tracking-widest" style={{ fontFamily: 'var(--font-jetbrains)', color: 'rgba(61,61,61,.5)' }}>{s.label}</span>
+            </div>
+            <div className="font-display text-xl leading-none" style={{ color: '#0E2916' }}>{s.val}</div>
+            <div className="mt-1 text-[11px]" style={{ color: 'rgba(61,61,61,.5)' }}>{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── MAIN GRID ── */}
+      <div className="grid lg:grid-cols-12 gap-5 mb-5">
+
+        {/* Left — Donut + progress bar */}
+        <div className="lg:col-span-5 flex flex-col gap-5">
+
+          {/* Donut card */}
+          <div className="rounded-2xl bg-white p-6 shadow-card ring-1 ring-black/5">
+            <div className="text-[10px] uppercase tracking-widest mb-4" style={{ fontFamily: 'var(--font-jetbrains)', color: '#722F37' }}>Répartition globale</div>
+
+            <div className="flex items-center gap-6">
+              <div className="relative shrink-0">
+                <svg ref={donutRef} viewBox="0 0 140 140" className="h-44 w-44">
+                  <circle cx="70" cy="70" r="54" fill="none" stroke="#F4E4C1" strokeWidth="22"/>
+                  {donutSegs.map((seg, i) => (
+                    <circle
+                      key={i}
+                      className="bseg"
+                      cx="70" cy="70" r="54"
+                      fill="none"
+                      stroke={seg.color}
+                      strokeWidth="22"
+                      strokeDasharray={String(C2)}
+                      strokeDashoffset={String(C2)}
+                      data-target={String(seg.offset)}
+                      style={{ transform: `rotate(${seg.rotation - 90}deg)`, transformOrigin: 'center' }}
                     />
-                    <span className="self-center text-sm text-gray-500 whitespace-nowrap">FCFA</span>
+                  ))}
+                </svg>
+                <div className="absolute inset-0 grid place-items-center text-center">
+                  <div>
+                    <div className="font-display text-2xl leading-none" style={{ color: '#0E2916' }}>{spentPct}%</div>
+                    <div className="text-[9px] uppercase tracking-widest mt-0.5" style={{ fontFamily: 'var(--font-jetbrains)', color: 'rgba(61,61,61,.5)' }}>utilisé</div>
                   </div>
-                  <Button onClick={handleGenerate} className="px-8"
-                    style={{ background: '#1E5631' }}>
-                    Générer mon budget →
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      ) : (
-        <div className="space-y-6">
-          {/* Summary cards */}
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: 'Budget total', value: formatFCFA(totalPlanned), color: '#1E5631' },
-              { label: 'Dépensé', value: formatFCFA(totalSpent), color: '#722F37' },
-              { label: 'Restant', value: formatFCFA(totalPlanned - totalSpent), color: '#D4A574' },
-            ].map(s => (
-              <Card key={s.label}>
-                <CardContent className="py-4 text-center">
-                  <p className="text-xs text-gray-400 mb-1">{s.label}</p>
-                  <p className="font-bold text-sm" style={{ color: s.color }}>{s.value}</p>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              </div>
+
+              <ul className="flex-1 space-y-2.5">
+                {topCats.map(cat => (
+                  <li key={cat.id} className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: cat.color }} />
+                    <span className="flex-1 text-[12px] truncate" style={{ color: 'rgba(61,61,61,.8)' }}>{cat.name}</span>
+                    <span className="text-[11px] font-medium shrink-0" style={{ fontFamily: 'var(--font-jetbrains)', color: '#0E2916' }}>{cat.pct}%</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Global progress bar */}
+            <div className="mt-5">
+              <div className="flex justify-between text-[11px] mb-2" style={{ fontFamily: 'var(--font-jetbrains)', color: 'rgba(61,61,61,.55)' }}>
+                <span>Dépensé</span>
+                <span style={{ color: spentPct > 90 ? '#722F37' : '#1E5631' }}>{spentPct}%</span>
+              </div>
+              <div className="h-3 rounded-full bg-[#F4E4C1] overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${spentPct}%`, background: 'linear-gradient(90deg, #1E5631, #D4A574, #722F37)' }} />
+              </div>
+            </div>
           </div>
 
-          {/* Progress */}
-          <Card>
-            <CardContent className="py-4">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-600">Progression des dépenses</span>
-                <span className="font-semibold" style={{ color: progressPct > 90 ? '#722F37' : '#1E5631' }}>
-                  {progressPct}%
-                </span>
+          {/* AI Insights panel */}
+          <div className="rounded-2xl overflow-hidden ring-1" style={{ background: 'linear-gradient(135deg, #0E2916, #1E5631)', outlineColor: 'rgba(212,165,116,.2)' }}>
+            <div className="px-5 pt-5 pb-3 border-b border-white/10 flex items-center gap-3">
+              <div className="grid h-8 w-8 place-items-center rounded-xl shrink-0" style={{ background: 'rgba(212,165,116,.2)' }}>
+                <svg viewBox="0 0 24 24" className="h-4 w-4" style={{ color: '#D4A574' }} fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
               </div>
-              <Progress value={progressPct}
-                className={progressPct > 90 ? '[&>div]:bg-red-500' : '[&>div]:bg-green-700'} />
-            </CardContent>
-          </Card>
-
-          {/* Warnings */}
-          {budget.warnings && budget.warnings.length > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-1">
-              {budget.warnings.map((w, i) => (
-                <p key={i} className="text-sm text-amber-700">⚠️ {w}</p>
-              ))}
+              <div>
+                <div className="text-[10px] uppercase tracking-widest" style={{ fontFamily: 'var(--font-jetbrains)', color: '#D4A574' }}>Sama IA · Insights</div>
+                <div className="text-sm font-medium" style={{ color: '#F7E9CF' }}>3 recommandations actives</div>
+              </div>
             </div>
-          )}
 
-          {/* Pie Chart + Categories */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Répartition</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={240}>
-                  <PieChart>
-                    <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={90}
-                      dataKey="value" paddingAngle={2}>
-                      {chartData.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(val) => typeof val === 'number' ? formatFCFA(val) : val} />
-                    <Legend iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            <ul className="divide-y divide-white/10">
+              {AI_INSIGHTS.map((ins, i) => (
+                <li key={i} className="px-5 py-4">
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 text-base shrink-0">{ins.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium leading-tight" style={{ color: '#F7E9CF' }}>{ins.title}</div>
+                      <div className="mt-1 text-[12px] leading-snug" style={{ color: 'rgba(247,233,207,.7)' }}>{ins.text}</div>
+                      <Link href={ins.href} className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium hover:opacity-80 transition" style={{ color: '#D4A574' }}>
+                        {ins.cta} <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+                      </Link>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
 
-            {/* Categories list */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Postes budgétaires</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                {budget.categories?.map((cat, i) => {
-                  const pct = cat.amountSpent > 0
-                    ? Math.round((cat.amountSpent / cat.amountRecommended) * 100)
-                    : 0
-                  return (
-                    <button key={cat.id}
-                      onClick={() => router.push(`/app/budget/${cat.id}`)}
-                      className="w-full text-left p-3 rounded-lg border hover:border-green-300 hover:bg-green-50 transition-all"
+        {/* Right — Categories list */}
+        <div className="lg:col-span-7">
+          <div className="rounded-2xl bg-white shadow-card ring-1 ring-black/5 overflow-hidden">
+            <div className="px-5 py-4 border-b border-black/5 flex items-center justify-between">
+              <div className="font-display text-lg" style={{ color: '#0E2916' }}>Postes budgétaires</div>
+              <span className="text-[11px] rounded-full px-2.5 py-1" style={{ fontFamily: 'var(--font-jetbrains)', background: '#EAF1EC', color: '#1E5631' }}>{cats.length} catégories</span>
+            </div>
+
+            <ul className="divide-y divide-black/5">
+              {cats.map(cat => {
+                const catPct = cat.budget > 0 ? Math.min(Math.round((cat.spent / cat.budget) * 100), 120) : 0
+                const isExpanded = expanded === cat.id
+                return (
+                  <li key={cat.id}>
+                    <button
+                      className="w-full px-5 py-4 text-left hover:bg-[#FAF7F2]/50 transition"
+                      onClick={() => setExpanded(isExpanded ? null : cat.id)}
                     >
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-medium flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full inline-block"
-                            style={{ background: COLORS[i % COLORS.length] }} />
-                          {cat.name}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {formatFCFA(cat.amountRecommended)}
-                        </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl shrink-0 w-7 text-center">{cat.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 mb-1.5">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-sm font-medium truncate" style={{ color: '#0E2916' }}>{cat.name}</span>
+                              {cat.over && <span className="text-[9px] rounded-full px-1.5 py-0.5 shrink-0" style={{ background: 'rgba(114,47,55,.1)', color: '#722F37', fontFamily: 'var(--font-jetbrains)' }}>⚠ OVER</span>}
+                              {catPct >= 100 && !cat.over && <span className="text-[9px] rounded-full px-1.5 py-0.5 shrink-0" style={{ background: '#EAF1EC', color: '#1E5631', fontFamily: 'var(--font-jetbrains)' }}>✓ PAYÉ</span>}
+                            </div>
+                            <div className="text-right shrink-0">
+                              <div className="text-[12px] font-medium" style={{ color: '#0E2916', fontFamily: 'var(--font-jetbrains)' }}>{formatFCFA(cat.spent)}</div>
+                              <div className="text-[10px]" style={{ color: 'rgba(61,61,61,.45)', fontFamily: 'var(--font-jetbrains)' }}>/ {formatFCFA(cat.budget)}</div>
+                            </div>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-[#F4E4C1] overflow-hidden">
+                            <div className="h-full rounded-full transition-all duration-700" style={{
+                              width: `${Math.min(catPct, 100)}%`,
+                              background: cat.over ? 'linear-gradient(90deg, #722F37, #a85565)' : catPct >= 100 ? '#1E5631' : `linear-gradient(90deg, ${cat.color}, #D4A574)`,
+                            }} />
+                          </div>
+                          <div className="mt-1 flex justify-between text-[10px]" style={{ fontFamily: 'var(--font-jetbrains)', color: 'rgba(61,61,61,.45)' }}>
+                            <span>{catPct}% utilisé</span>
+                            <span>{formatFCFA(Math.max(0, cat.budget - cat.spent))} restant</span>
+                          </div>
+                        </div>
+                        <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0 transition-transform duration-200" style={{ color: 'rgba(61,61,61,.35)', transform: isExpanded ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m4 6 4 4 4-4"/></svg>
                       </div>
-                      <Progress value={pct} className="h-1 [&>div]:bg-green-600" />
                     </button>
-                  )
-                })}
-              </CardContent>
-            </Card>
+
+                    {/* Expanded state */}
+                    {isExpanded && (
+                      <div className="px-5 pb-4 pt-0" style={{ background: 'rgba(250,247,242,.5)' }}>
+                        {cat.tips.length > 0 && (
+                          <div className="mb-3 rounded-xl p-3" style={{ background: 'rgba(30,86,49,.06)', border: '1px solid rgba(30,86,49,.1)' }}>
+                            <div className="text-[10px] uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--font-jetbrains)', color: '#1E5631' }}>💡 Conseils Sama IA</div>
+                            <ul className="space-y-1">
+                              {cat.tips.map((tip, j) => (
+                                <li key={j} className="text-[12px] leading-snug" style={{ color: 'rgba(61,61,61,.75)' }}>· {tip}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          <Link
+                            href={`/app/budget/${cat.id}`}
+                            className="flex-1 text-center rounded-xl py-2 text-[12px] font-medium hover:opacity-90 transition"
+                            style={{ background: '#1E5631', color: '#F7E9CF' }}
+                          >
+                            Voir les dépenses
+                          </Link>
+                          <button
+                            onClick={() => { setAddCat(cat.id); setShowAddModal(true) }}
+                            className="flex-1 text-center rounded-xl py-2 text-[12px] font-medium border hover:bg-[#EAF1EC] transition"
+                            style={{ borderColor: '#1E5631', color: '#1E5631' }}
+                          >
+                            + Ajouter dépense
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* ── ADD EXPENSE MODAL ── */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: 'rgba(14,41,22,.5)', backdropFilter: 'blur(4px)' }}>
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-card" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-display text-xl" style={{ color: '#0E2916' }}>Ajouter une dépense</h2>
+              <button onClick={() => setShowAddModal(false)} className="grid h-8 w-8 place-items-center rounded-full hover:bg-[#FAF7F2]">
+                <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] uppercase tracking-widest mb-1.5" style={{ fontFamily: 'var(--font-jetbrains)', color: 'rgba(61,61,61,.55)' }}>Catégorie</label>
+                <select
+                  value={addCat}
+                  onChange={e => setAddCat(e.target.value)}
+                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[#1E5631]"
+                  style={{ borderColor: 'rgba(61,61,61,.15)', color: '#0E2916' }}
+                >
+                  <option value="">Sélectionner…</option>
+                  {cats.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] uppercase tracking-widest mb-1.5" style={{ fontFamily: 'var(--font-jetbrains)', color: 'rgba(61,61,61,.55)' }}>Description</label>
+                <input
+                  type="text"
+                  value={addDesc}
+                  onChange={e => setAddDesc(e.target.value)}
+                  placeholder="Ex: Acompte décorateur Aida"
+                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[#1E5631]"
+                  style={{ borderColor: 'rgba(61,61,61,.15)', color: '#0E2916' }}
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] uppercase tracking-widest mb-1.5" style={{ fontFamily: 'var(--font-jetbrains)', color: 'rgba(61,61,61,.55)' }}>Montant (FCFA)</label>
+                <input
+                  type="text"
+                  value={addAmt}
+                  onChange={e => setAddAmt(e.target.value)}
+                  placeholder="500 000"
+                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:border-[#1E5631]"
+                  style={{ borderColor: 'rgba(61,61,61,.15)', color: '#0E2916' }}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="rounded-xl py-3 text-sm font-medium border hover:bg-[#FAF7F2] transition"
+                  style={{ borderColor: 'rgba(61,61,61,.15)', color: '#3D3D3D' }}
+                >Annuler</button>
+                <button
+                  onClick={() => {
+                    if (!addCat || !addDesc || !addAmt) { toast.error('Remplis tous les champs'); return }
+                    router.push(`/app/budget/${addCat}`)
+                    setShowAddModal(false)
+                  }}
+                  className="rounded-xl py-3 text-sm font-medium hover:opacity-90 transition"
+                  style={{ background: '#1E5631', color: '#F7E9CF' }}
+                >Enregistrer</button>
+              </div>
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
