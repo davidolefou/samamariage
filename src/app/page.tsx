@@ -92,9 +92,9 @@ export default function HomePage() {
 
               <nav className="hidden lg:flex items-center gap-9 text-sm font-medium" style={{ color: 'rgba(61,61,61,.8)' }}>
                 <a href="#how" className="hover:text-royal-700 transition" style={{ '--hover-color': '#1E5631' } as React.CSSProperties} onMouseEnter={e => (e.currentTarget.style.color = '#1E5631')} onMouseLeave={e => (e.currentTarget.style.color = '')}>Comment ça marche</a>
-                <a href="#modules" onMouseEnter={e => (e.currentTarget.style.color = '#1E5631')} onMouseLeave={e => (e.currentTarget.style.color = '')} className="transition">Prestataires</a>
+                <a href="#modules" onMouseEnter={e => (e.currentTarget.style.color = '#1E5631')} onMouseLeave={e => (e.currentTarget.style.color = '')} className="transition">Modules</a>
                 <a href="#diaspora" onMouseEnter={e => (e.currentTarget.style.color = '#1E5631')} onMouseLeave={e => (e.currentTarget.style.color = '')} className="transition">Diaspora</a>
-                <a href="#faq" onMouseEnter={e => (e.currentTarget.style.color = '#1E5631')} onMouseLeave={e => (e.currentTarget.style.color = '')} className="transition">FAQ</a>
+                <Link href="/tarifs" onMouseEnter={e => (e.currentTarget.style.color = '#1E5631')} onMouseLeave={e => (e.currentTarget.style.color = '')} className="transition font-semibold" style={{ color: '#1E5631' }}>Tarifs</Link>
               </nav>
 
               <div className="flex items-center gap-2">
@@ -114,9 +114,10 @@ export default function HomePage() {
             {/* Mobile menu */}
             <div id="mobileMenu" className="hidden lg:hidden mt-2 rounded-2xl border p-2 shadow-card" style={{ background: 'rgba(250,247,242,.95)', backdropFilter: 'blur(12px)', borderColor: 'rgba(61,61,61,.1)' }}>
               <a href="#how" className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-royal-50">Comment ça marche</a>
-              <a href="#modules" className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-royal-50">Prestataires</a>
+              <a href="#modules" className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-royal-50">Modules</a>
               <a href="#diaspora" className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-royal-50">Diaspora</a>
               <a href="#faq" className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-royal-50">FAQ</a>
+              <Link href="/tarifs" className="block rounded-xl px-4 py-3 text-sm font-semibold hover:bg-royal-50" style={{ color: '#1E5631' }}>Tarifs</Link>
               <Link href="/inscription" className="mt-1 block rounded-xl px-4 py-3 text-center text-sm font-medium" style={{ background: '#1E5631', color: '#FBF4EA' }}>S&apos;inscrire maintenant</Link>
               <Link href="/connexion" className="block rounded-xl px-4 py-3 text-center text-sm font-medium border" style={{ borderColor: 'rgba(30,86,49,.15)', color: '#0E2916' }}>Se connecter</Link>
             </div>
