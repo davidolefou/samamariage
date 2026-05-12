@@ -49,26 +49,11 @@ export default function HomePage() {
       document.querySelectorAll('.reveal:not(.in)').forEach(el => el.classList.add('in'))
     }, 1200)
 
-    // Waitlist form
-    const form = document.getElementById('waitForm') as HTMLFormElement | null
-    const handleSubmit = (e: Event) => {
-      e.preventDefault()
-      const btn = form?.querySelector('button[type="submit"]') as HTMLButtonElement
-      if (btn) {
-        btn.textContent = '✓ Inscrite ! On t\'écrit dans 2 min'
-        btn.style.background = '#1E5631'
-        btn.style.color = '#F7E9CF'
-      }
-      setTimeout(() => alert('Merci ! On t\'envoie ton accès à l\'ouverture. Sama xewël 💍🇸🇳'), 200)
-    }
-    form?.addEventListener('submit', handleSubmit)
-
     return () => {
       window.removeEventListener('scroll', onScroll)
       burger?.removeEventListener('click', toggleMenu)
       io?.disconnect()
       clearTimeout(fallback)
-      form?.removeEventListener('submit', handleSubmit)
     }
   }, [])
 
@@ -113,10 +98,13 @@ export default function HomePage() {
               </nav>
 
               <div className="flex items-center gap-2">
-                <a href="#waitlist" className="hidden sm:inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition" style={{ background: '#1E5631', color: '#FBF4EA', boxShadow: 'inset 0 0 0 1px rgba(212,165,116,.3)' }}>
+                <Link href="/connexion" className="hidden sm:inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-medium transition hover:bg-[#EAF1EC]" style={{ borderColor: 'rgba(30,86,49,.15)', color: '#0E2916' }}>
+                  Se connecter
+                </Link>
+                <Link href="/inscription" className="hidden sm:inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition" style={{ background: '#1E5631', color: '#FBF4EA', boxShadow: 'inset 0 0 0 1px rgba(212,165,116,.3)' }}>
                   <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: '#D4A574' }}></span>
-                  Rejoindre la waitlist
-                </a>
+                  Commencer
+                </Link>
                 <button id="burgerBtn" className="lg:hidden grid h-10 w-10 place-items-center rounded-xl border" style={{ borderColor: 'rgba(61,61,61,.1)', background: '#FAF7F2' }}>
                   <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
                 </button>
@@ -129,7 +117,8 @@ export default function HomePage() {
               <a href="#modules" className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-royal-50">Prestataires</a>
               <a href="#diaspora" className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-royal-50">Diaspora</a>
               <a href="#faq" className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-royal-50">FAQ</a>
-              <a href="#waitlist" className="mt-1 block rounded-xl px-4 py-3 text-center text-sm font-medium" style={{ background: '#1E5631', color: '#FBF4EA' }}>Rejoindre la waitlist</a>
+              <Link href="/inscription" className="mt-1 block rounded-xl px-4 py-3 text-center text-sm font-medium" style={{ background: '#1E5631', color: '#FBF4EA' }}>S&apos;inscrire maintenant</Link>
+              <Link href="/connexion" className="block rounded-xl px-4 py-3 text-center text-sm font-medium border" style={{ borderColor: 'rgba(30,86,49,.15)', color: '#0E2916' }}>Se connecter</Link>
             </div>
           </div>
         </header>
@@ -152,7 +141,7 @@ export default function HomePage() {
                   <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: '#1E5631' }}></span>
                 </span>
                 <span className="font-mono tracking-tight">+500 mariées</span>
-                <span style={{ color: 'rgba(61,61,61,.6)' }}>déjà sur la liste d&apos;attente</span>
+                <span style={{ color: 'rgba(61,61,61,.6)' }}>déjà inscrites</span>
               </div>
 
               <h1 className="reveal d1 mt-6 font-display font-semibold leading-[1.02] text-[44px] sm:text-6xl lg:text-[78px]" style={{ color: '#0E2916' }}>
@@ -171,10 +160,10 @@ export default function HomePage() {
               </p>
 
               <div className="reveal d3 mt-9 flex flex-wrap items-center gap-3">
-                <a href="#waitlist" className="group inline-flex items-center gap-2 rounded-full px-6 py-4 text-[15px] font-medium shadow-glow transition" style={{ background: '#1E5631', color: '#FBF4EA', boxShadow: '0 30px 80px -30px rgba(30,86,49,.45), inset 0 0 0 1px rgba(212,165,116,.3)' }}>
-                  Rejoindre la waitlist
+                <Link href="/inscription" className="group inline-flex items-center gap-2 rounded-full px-6 py-4 text-[15px] font-medium shadow-glow transition" style={{ background: '#1E5631', color: '#FBF4EA', boxShadow: '0 30px 80px -30px rgba(30,86,49,.45), inset 0 0 0 1px rgba(212,165,116,.3)' }}>
+                  Commencer gratuitement
                   <svg viewBox="0 0 20 20" className="h-4 w-4 transition group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h12M11 5l5 5-5 5" /></svg>
-                </a>
+                </Link>
                 <a href="#demo" className="group inline-flex items-center gap-2 rounded-full border px-6 py-4 text-[15px] font-medium transition" style={{ borderColor: 'rgba(30,86,49,.15)', background: 'rgba(255,255,255,.7)', color: '#0E2916', backdropFilter: 'blur(8px)' }}>
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" style={{ color: '#1E5631' }}><path d="M8 5v14l11-7z" /></svg>
                   Voir une démo · 2 min
@@ -349,7 +338,7 @@ export default function HomePage() {
                 <div className="mt-8 grid grid-cols-3 gap-6">
                   {[
                     { n: '50K+', label: 'vues TikTok', color: '#173F24' },
-                    { n: '500+', label: 'waitlist', color: '#B98548' },
+                    { n: '500+', label: 'inscrites', color: '#B98548' },
                     { n: '12', label: 'pays diaspora', color: '#722F37' },
                   ].map(s => (
                     <div key={s.label}>
@@ -520,10 +509,10 @@ export default function HomePage() {
                 ))}
               </ul>
 
-              <a href="#waitlist" className="reveal d4 mt-10 inline-flex items-center gap-2 rounded-full px-6 py-4 text-[15px] font-medium transition" style={{ background: '#D4A574', color: '#3D181C' }}>
+              <Link href="/inscription" className="reveal d4 mt-10 inline-flex items-center gap-2 rounded-full px-6 py-4 text-[15px] font-medium transition" style={{ background: '#D4A574', color: '#3D181C' }}>
                 Découvrir Sama Diaspora
                 <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h12M11 5l5 5-5 5" /></svg>
-              </a>
+              </Link>
             </div>
 
             {/* Globe / map */}
@@ -595,7 +584,7 @@ export default function HomePage() {
                   ))}
                   <li className="flex gap-2" style={{ color: 'rgba(61,61,61,.4)' }}><span className="mt-0.5">·</span> Coach Sérénité non inclus</li>
                 </ul>
-                <a href="#waitlist" className="mt-7 inline-flex justify-center rounded-full border px-5 py-3 text-sm font-medium transition" style={{ borderColor: 'rgba(30,86,49,.15)', color: '#0E2916' }}>Choisir Essentiel</a>
+                <Link href="/inscription" className="mt-7 inline-flex justify-center rounded-full border px-5 py-3 text-sm font-medium transition" style={{ borderColor: 'rgba(30,86,49,.15)', color: '#0E2916' }}>Choisir Essentiel</Link>
               </article>
 
               {/* Premium (featured) */}
@@ -614,7 +603,7 @@ export default function HomePage() {
                       <li key={f} className="flex gap-2"><span className="mt-0.5" style={{ color: '#D4A574' }}>✓</span> {f}</li>
                     ))}
                   </ul>
-                  <a href="#waitlist" className="mt-7 inline-flex justify-center rounded-full px-5 py-3 text-sm font-medium transition" style={{ background: '#D4A574', color: '#3D181C' }}>Choisir Premium</a>
+                  <Link href="/inscription" className="mt-7 inline-flex justify-center rounded-full px-5 py-3 text-sm font-medium transition" style={{ background: '#D4A574', color: '#3D181C' }}>Choisir Premium</Link>
                 </div>
               </article>
 
@@ -632,7 +621,7 @@ export default function HomePage() {
                     <li key={f} className="flex gap-2"><span className="mt-0.5" style={{ color: '#722F37' }}>✓</span> {f}</li>
                   ))}
                 </ul>
-                <a href="#waitlist" className="mt-7 inline-flex justify-center rounded-full border px-5 py-3 text-sm font-medium transition" style={{ borderColor: 'rgba(114,47,55,.3)', background: 'rgba(114,47,55,.05)', color: '#722F37' }}>Choisir Diaspora</a>
+                <Link href="/inscription" className="mt-7 inline-flex justify-center rounded-full border px-5 py-3 text-sm font-medium transition" style={{ borderColor: 'rgba(114,47,55,.3)', background: 'rgba(114,47,55,.05)', color: '#722F37' }}>Choisir Diaspora</Link>
               </article>
             </div>
 
@@ -669,8 +658,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── CTA / WAITLIST ── */}
-        <section id="waitlist" className="relative py-24 sm:py-32 overflow-hidden" style={{ color: '#FBF4EA' }}>
+        {/* ── CTA FINALE ── */}
+        <section id="cta" className="relative py-24 sm:py-32 overflow-hidden" style={{ color: '#FBF4EA' }}>
           <div className="absolute inset-0 -z-10">
             <div className="absolute inset-0 photo-ph"></div>
             <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(14,41,22,.95), rgba(14,41,22,.9) 60%, rgba(114,47,55,.9))' }}></div>
@@ -679,53 +668,38 @@ export default function HomePage() {
             <div className="absolute -top-32 -left-32 h-[420px] w-[420px] rounded-full blur-3xl" style={{ background: 'rgba(114,47,55,.4)' }}></div>
           </div>
 
-          <div className="mx-auto max-w-6xl px-5 sm:px-8 grid lg:grid-cols-12 gap-10 items-center">
-            <div className="lg:col-span-7">
-              <div className="reveal font-mono text-[11px] uppercase tracking-[0.2em]" style={{ color: '#D4A574' }}>Liste d&apos;attente · vague mai 2026</div>
-              <h2 className="reveal d1 mt-3 font-display text-4xl sm:text-5xl lg:text-6xl text-balance">
-                Prête à transformer<br />ton mariage&nbsp;?
-              </h2>
-              <p className="reveal d2 mt-5 max-w-lg text-lg" style={{ color: 'rgba(247,233,207,.85)' }}>
-                Rejoins les 500+ mariées déjà inscrites. On t&apos;envoie ton accès dès l&apos;ouverture, et un guide PDF offert : <em>&quot;Les 7 pièges qui ruinent un mariage sénégalais.&quot;</em>
-              </p>
+          <div className="mx-auto max-w-4xl px-5 sm:px-8 text-center">
+            <div className="reveal font-mono text-[11px] uppercase tracking-[0.2em]" style={{ color: '#D4A574' }}>Disponible maintenant · 🇸🇳</div>
+            <h2 className="reveal d1 mt-4 font-display text-4xl sm:text-5xl lg:text-[72px] text-balance leading-[1.02]">
+              Prête à transformer<br />ton mariage&nbsp;?
+            </h2>
+            <p className="reveal d2 mt-6 max-w-xl mx-auto text-lg" style={{ color: 'rgba(247,233,207,.85)' }}>
+              Rejoins les 500+ mariées qui planifient leur mariage sénégalais avec SamaMariage. Inscription en 2 minutes, données sécurisées.
+            </p>
 
-              <div className="reveal d3 mt-8 flex items-center gap-5">
-                <div className="flex -space-x-3">
-                  {['linear-gradient(135deg,#D4A574,#722F37)', 'linear-gradient(135deg,#722F37,#1E5631)', 'linear-gradient(135deg,#1E5631,#D4A574)', 'linear-gradient(135deg,#EFD9B8,#B98548)'].map((bg, i) => (
-                    <div key={i} className="h-10 w-10 rounded-full ring-2" style={{ background: bg, outlineColor: '#0E2916' }}></div>
-                  ))}
-                  <div className="grid h-10 w-10 place-items-center rounded-full text-[10px] font-mono" style={{ background: '#0E2916', outline: '2px solid #D4A574' }}>+496</div>
-                </div>
-                <div className="text-sm" style={{ color: 'rgba(247,233,207,.8)' }}>déjà sur la liste</div>
+            <div className="reveal d3 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/inscription" className="group inline-flex items-center gap-2 rounded-full px-8 py-4 text-[16px] font-medium transition w-full sm:w-auto justify-center" style={{ background: '#D4A574', color: '#3D181C', boxShadow: '0 20px 60px -20px rgba(212,165,116,.6)' }}>
+                Créer mon compte
+                <svg viewBox="0 0 20 20" className="h-4 w-4 transition group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h12M11 5l5 5-5 5" /></svg>
+              </Link>
+              <Link href="/connexion" className="inline-flex items-center gap-2 rounded-full border px-8 py-4 text-[16px] font-medium transition w-full sm:w-auto justify-center" style={{ borderColor: 'rgba(255,255,255,.25)', color: '#FBF4EA', background: 'rgba(255,255,255,.07)', backdropFilter: 'blur(8px)' }}>
+                J&apos;ai déjà un compte
+              </Link>
+            </div>
+
+            <div className="reveal d4 mt-10 flex items-center justify-center gap-5">
+              <div className="flex -space-x-3">
+                {['linear-gradient(135deg,#D4A574,#722F37)', 'linear-gradient(135deg,#722F37,#1E5631)', 'linear-gradient(135deg,#1E5631,#D4A574)', 'linear-gradient(135deg,#EFD9B8,#B98548)'].map((bg, i) => (
+                  <div key={i} className="h-10 w-10 rounded-full ring-2 ring-[#0E2916]" style={{ background: bg }}></div>
+                ))}
+                <div className="grid h-10 w-10 place-items-center rounded-full text-[10px] font-mono" style={{ background: 'rgba(255,255,255,.12)', outline: '2px solid rgba(212,165,116,.4)' }}>+496</div>
+              </div>
+              <div className="text-sm text-left" style={{ color: 'rgba(247,233,207,.8)' }}>
+                500+ mariées<br /><span className="text-[11px]" style={{ color: 'rgba(212,165,116,.7)' }}>nous font confiance</span>
               </div>
             </div>
 
-            {/* Form */}
-            <div className="lg:col-span-5">
-              <form id="waitForm" className="reveal d2 glass-dark rounded-3xl p-6 sm:p-7 shadow-glow">
-                <label className="block text-xs font-mono uppercase tracking-widest" style={{ color: 'rgba(212,165,116,.8)' }}>Email</label>
-                <input type="email" required placeholder="aminata@gmail.com"
-                  className="mt-2 w-full rounded-2xl px-4 py-3.5 outline-none transition"
-                  style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.15)', color: '#FBF4EA' }} />
-
-                <label className="block mt-5 text-xs font-mono uppercase tracking-widest" style={{ color: 'rgba(212,165,116,.8)' }}>Téléphone (WhatsApp)</label>
-                <input type="tel" required placeholder="+221 77 000 00 00"
-                  className="mt-2 w-full rounded-2xl px-4 py-3.5 outline-none transition"
-                  style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.15)', color: '#FBF4EA' }} />
-
-                <label className="block mt-5 text-xs font-mono uppercase tracking-widest" style={{ color: 'rgba(212,165,116,.8)' }}>Date prévue du mariage</label>
-                <input type="month" required
-                  className="mt-2 w-full rounded-2xl px-4 py-3.5 outline-none transition"
-                  style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.15)', color: '#FBF4EA' }} />
-
-                <button type="submit" className="mt-7 group w-full inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-4 text-[15px] font-medium transition" style={{ background: '#D4A574', color: '#3D181C' }}>
-                  <span>Rejoindre les 500+ mariées</span>
-                  <svg viewBox="0 0 20 20" className="h-4 w-4 transition group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h12M11 5l5 5-5 5" /></svg>
-                </button>
-
-                <p className="mt-3 text-center text-[11px]" style={{ color: 'rgba(247,233,207,.6)' }}>En t&apos;inscrivant, tu acceptes que SamaMariage te contacte. Zéro spam. Promesse sur le ndawtal.</p>
-              </form>
-            </div>
+            <p className="reveal mt-6 text-[11px] font-mono" style={{ color: 'rgba(247,233,207,.4)' }}>Paiement Orange Money · Wave · Visa · Stripe &nbsp;·&nbsp; Données chiffrées RGPD</p>
           </div>
         </section>
 
