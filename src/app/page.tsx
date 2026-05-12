@@ -101,7 +101,7 @@ export default function HomePage() {
                 <Link href="/connexion" className="hidden sm:inline-flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-medium transition hover:bg-[#EAF1EC]" style={{ borderColor: 'rgba(30,86,49,.15)', color: '#0E2916' }}>
                   Se connecter
                 </Link>
-                <Link href="/inscription" className="hidden sm:inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition" style={{ background: '#1E5631', color: '#FBF4EA', boxShadow: 'inset 0 0 0 1px rgba(212,165,116,.3)' }}>
+                <Link href="/onboarding" className="hidden sm:inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition" style={{ background: '#1E5631', color: '#FBF4EA', boxShadow: 'inset 0 0 0 1px rgba(212,165,116,.3)' }}>
                   <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: '#D4A574' }}></span>
                   Commencer
                 </Link>
@@ -118,7 +118,7 @@ export default function HomePage() {
               <a href="#diaspora" className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-royal-50">Diaspora</a>
               <a href="#faq" className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-royal-50">FAQ</a>
               <Link href="/tarifs" className="block rounded-xl px-4 py-3 text-sm font-semibold hover:bg-royal-50" style={{ color: '#1E5631' }}>Tarifs</Link>
-              <Link href="/inscription" className="mt-1 block rounded-xl px-4 py-3 text-center text-sm font-medium" style={{ background: '#1E5631', color: '#FBF4EA' }}>S&apos;inscrire maintenant</Link>
+              <Link href="/onboarding" className="mt-1 block rounded-xl px-4 py-3 text-center text-sm font-medium" style={{ background: '#1E5631', color: '#FBF4EA' }}>S&apos;inscrire maintenant</Link>
               <Link href="/connexion" className="block rounded-xl px-4 py-3 text-center text-sm font-medium border" style={{ borderColor: 'rgba(30,86,49,.15)', color: '#0E2916' }}>Se connecter</Link>
             </div>
           </div>
@@ -161,7 +161,7 @@ export default function HomePage() {
               </p>
 
               <div className="reveal d3 mt-9 flex flex-wrap items-center gap-3">
-                <Link href="/inscription" className="group inline-flex items-center gap-2 rounded-full px-6 py-4 text-[15px] font-medium shadow-glow transition" style={{ background: '#1E5631', color: '#FBF4EA', boxShadow: '0 30px 80px -30px rgba(30,86,49,.45), inset 0 0 0 1px rgba(212,165,116,.3)' }}>
+                <Link href="/onboarding" className="group inline-flex items-center gap-2 rounded-full px-6 py-4 text-[15px] font-medium shadow-glow transition" style={{ background: '#1E5631', color: '#FBF4EA', boxShadow: '0 30px 80px -30px rgba(30,86,49,.45), inset 0 0 0 1px rgba(212,165,116,.3)' }}>
                   Commencer gratuitement
                   <svg viewBox="0 0 20 20" className="h-4 w-4 transition group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h12M11 5l5 5-5 5" /></svg>
                 </Link>
@@ -510,7 +510,7 @@ export default function HomePage() {
                 ))}
               </ul>
 
-              <Link href="/inscription" className="reveal d4 mt-10 inline-flex items-center gap-2 rounded-full px-6 py-4 text-[15px] font-medium transition" style={{ background: '#D4A574', color: '#3D181C' }}>
+              <Link href="/onboarding" className="reveal d4 mt-10 inline-flex items-center gap-2 rounded-full px-6 py-4 text-[15px] font-medium transition" style={{ background: '#D4A574', color: '#3D181C' }}>
                 Découvrir Sama Diaspora
                 <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h12M11 5l5 5-5 5" /></svg>
               </Link>
@@ -585,7 +585,7 @@ export default function HomePage() {
                   ))}
                   <li className="flex gap-2" style={{ color: 'rgba(61,61,61,.4)' }}><span className="mt-0.5">·</span> Coach Sérénité non inclus</li>
                 </ul>
-                <Link href="/inscription" className="mt-7 inline-flex justify-center rounded-full border px-5 py-3 text-sm font-medium transition" style={{ borderColor: 'rgba(30,86,49,.15)', color: '#0E2916' }}>Choisir Essentiel</Link>
+                <Link href="/onboarding" className="mt-7 inline-flex justify-center rounded-full border px-5 py-3 text-sm font-medium transition" style={{ borderColor: 'rgba(30,86,49,.15)', color: '#0E2916' }}>Choisir Essentiel</Link>
               </article>
 
               {/* Premium (featured) */}
@@ -604,7 +604,7 @@ export default function HomePage() {
                       <li key={f} className="flex gap-2"><span className="mt-0.5" style={{ color: '#D4A574' }}>✓</span> {f}</li>
                     ))}
                   </ul>
-                  <Link href="/inscription" className="mt-7 inline-flex justify-center rounded-full px-5 py-3 text-sm font-medium transition" style={{ background: '#D4A574', color: '#3D181C' }}>Choisir Premium</Link>
+                  <Link href="/onboarding" className="mt-7 inline-flex justify-center rounded-full px-5 py-3 text-sm font-medium transition" style={{ background: '#D4A574', color: '#3D181C' }}>Choisir Premium</Link>
                 </div>
               </article>
 
@@ -622,7 +622,7 @@ export default function HomePage() {
                     <li key={f} className="flex gap-2"><span className="mt-0.5" style={{ color: '#722F37' }}>✓</span> {f}</li>
                   ))}
                 </ul>
-                <Link href="/inscription" className="mt-7 inline-flex justify-center rounded-full border px-5 py-3 text-sm font-medium transition" style={{ borderColor: 'rgba(114,47,55,.3)', background: 'rgba(114,47,55,.05)', color: '#722F37' }}>Choisir Diaspora</Link>
+                <Link href="/onboarding" className="mt-7 inline-flex justify-center rounded-full border px-5 py-3 text-sm font-medium transition" style={{ borderColor: 'rgba(114,47,55,.3)', background: 'rgba(114,47,55,.05)', color: '#722F37' }}>Choisir Diaspora</Link>
               </article>
             </div>
 
@@ -679,7 +679,7 @@ export default function HomePage() {
             </p>
 
             <div className="reveal d3 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/inscription" className="group inline-flex items-center gap-2 rounded-full px-8 py-4 text-[16px] font-medium transition w-full sm:w-auto justify-center" style={{ background: '#D4A574', color: '#3D181C', boxShadow: '0 20px 60px -20px rgba(212,165,116,.6)' }}>
+              <Link href="/onboarding" className="group inline-flex items-center gap-2 rounded-full px-8 py-4 text-[16px] font-medium transition w-full sm:w-auto justify-center" style={{ background: '#D4A574', color: '#3D181C', boxShadow: '0 20px 60px -20px rgba(212,165,116,.6)' }}>
                 Créer mon compte
                 <svg viewBox="0 0 20 20" className="h-4 w-4 transition group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h12M11 5l5 5-5 5" /></svg>
               </Link>

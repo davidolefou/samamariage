@@ -182,7 +182,7 @@ export default function TarifsPage() {
               </Link>
               <div className="flex items-center gap-2">
                 <Link href="/connexion" className="hidden sm:inline-flex rounded-full border px-5 py-2 text-sm font-medium transition hover:bg-[#EAF1EC]" style={{ borderColor: 'rgba(30,86,49,.15)', color: '#0E2916' }}>Se connecter</Link>
-                <Link href="/inscription" className="inline-flex rounded-full px-5 py-2 text-sm font-medium transition" style={{ background: '#1E5631', color: '#FBF4EA' }}>S&apos;inscrire</Link>
+                <Link href="/onboarding" className="inline-flex rounded-full px-5 py-2 text-sm font-medium transition" style={{ background: '#1E5631', color: '#FBF4EA' }}>S&apos;inscrire</Link>
               </div>
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function TarifsPage() {
                     )}
 
                     {/* CTA */}
-                    <Link href="/inscription" className="mb-8 flex items-center justify-center gap-2 rounded-2xl px-5 py-4 text-[15px] font-medium transition hover:opacity-90"
+                    <Link href="/onboarding" className="mb-8 flex items-center justify-center gap-2 rounded-2xl px-5 py-4 text-[15px] font-medium transition hover:opacity-90"
                       style={plan.highlight
                         ? { background: '#D4A574', color: '#3D181C' }
                         : { ...plan.ctaStyle }}>
@@ -425,7 +425,7 @@ export default function TarifsPage() {
                 <div className="p-5" />
                 {PLANS.map(plan => (
                   <div key={plan.id} className="p-4 border-l" style={{ borderColor: 'rgba(61,61,61,.06)' }}>
-                    <Link href="/inscription"
+                    <Link href="/onboarding"
                       className="flex items-center justify-center rounded-xl py-3 text-[13px] font-medium transition hover:opacity-90"
                       style={{ background: plan.color, color: plan.id === 'essentiel' ? '#FBF4EA' : plan.id === 'premium' ? '#3D181C' : '#FBF4EA' }}>
                       Choisir
@@ -463,7 +463,7 @@ export default function TarifsPage() {
                   </div>
                 ))}
               </div>
-              <Link href="/inscription" className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-[15px] font-medium transition hover:opacity-90" style={{ background: '#D4A574', color: '#3D181C' }}>
+              <Link href="/onboarding" className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-[15px] font-medium transition hover:opacity-90" style={{ background: '#D4A574', color: '#3D181C' }}>
                 Commencer Sama Diaspora
                 <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h12M11 5l5 5-5 5" /></svg>
               </Link>
@@ -545,7 +545,7 @@ export default function TarifsPage() {
               Quelle que soit ta formule, tu peux commencer aujourd&apos;hui. Inscription en 2 minutes.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/inscription" className="group inline-flex items-center gap-2 rounded-full px-8 py-4 text-[16px] font-medium transition hover:opacity-90 w-full sm:w-auto justify-center" style={{ background: '#D4A574', color: '#3D181C', boxShadow: '0 20px 60px -20px rgba(212,165,116,.5)' }}>
+              <Link href="/onboarding" className="group inline-flex items-center gap-2 rounded-full px-8 py-4 text-[16px] font-medium transition hover:opacity-90 w-full sm:w-auto justify-center" style={{ background: '#D4A574', color: '#3D181C', boxShadow: '0 20px 60px -20px rgba(212,165,116,.5)' }}>
                 Créer mon compte gratuitement
                 <svg viewBox="0 0 20 20" className="h-4 w-4 transition group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 10h12M11 5l5 5-5 5" /></svg>
               </Link>
