@@ -44,4 +44,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.github/
+# .github/ — décommente si token sans scope workflow

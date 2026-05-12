@@ -1,2 +1,12 @@
-// Barrel export — schémas ajoutés au Sprint 1
 export * from './users'
+export * from './weddings'
+export * from './budgets'
+export * from './ndawtal'
+export * from './vendors'
+export * from './bookings'
+export * from './payments'
+export * from './guests'
+export * from './outfits'
+export * from './messaging'
+export * from './reviews'
+export * from './analytics'
