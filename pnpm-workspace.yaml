@@ -1,7 +1,2 @@
-allowBuilds:
-  sharp: true
-  core-js: true
-  protobufjs: true
-  "@sentry/cli": true
-  esbuild: true
-  msw: true
+packages:
+  - 'frontend'
