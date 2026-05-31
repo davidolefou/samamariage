@@ -34,6 +34,7 @@ model User {
   ndawtalEntries    NdawtalEntry[]
   guests            Guest[]
   vendor            Vendor?
+  quoteRequests     QuoteRequest[]
 
   ownedOrganizations Organization[]       @relation("OrgOwner")
   memberships        OrganizationMember[] @relation("OrgMembership")
@@ -512,9 +513,46 @@ model Vendor {
   payoutMethod  String @default("") // wave | om | bank
   payoutAccount String @default("")
 
+  quoteRequests QuoteRequest[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([status, category])
   @@index([category])
+}
+
+// ── SamaMariage — Demandes de devis (lead mariée → prestataire) ────────────
+enum QuoteStatus {
+  NEW // reçue, pas encore traitée
+  QUOTED // devis envoyé par le pro
+  ACCEPTED // acceptée par la mariée (→ réservation)
+  DECLINED // déclinée (pro) ou refusée (mariée)
+  ARCHIVED
+}
+
+model QuoteRequest {
+  id       String @id @default(cuid())
+  vendorId String
+  vendor   Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  userId   String // la mariée qui demande
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  coupleName String    @default("")
+  eventDate  DateTime?
+  city       String    @default("")
+  guests     Int       @default(0)
+  budget     Int       @default(0) // FCFA
+  detail     String    @default("") // résumé de la prestation souhaitée
+  message    String    @default("")
+
+  status       QuoteStatus @default(NEW)
+  quoteAmount  Int? // montant du devis (FCFA) une fois QUOTED
+  quoteMessage String      @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vendorId, status])
+  @@index([userId])
 }
