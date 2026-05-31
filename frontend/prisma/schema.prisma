@@ -39,6 +39,7 @@ model User {
   planningTasks     PlanningTask[]
   moodItems         MoodItem[]
   moodCheckins      MoodCheckin[]
+  aiInteractions    AiInteraction[]
   vendor            Vendor?
   quoteRequests     QuoteRequest[]
   reviews           Review[]
@@ -464,6 +465,29 @@ model Guest {
 
   @@index([userId, rsvp])
   @@index([userId, side])
+}
+
+// ── SamaMariage — AI Gateway (journal des appels IA) ───────────────────────
+// Chaque appel ai.complete() écrit une ligne ici : tokens, coût, durée, cache.
+model AiInteraction {
+  id     String  @id @default(cuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  task             String // budget | planning | chat | ndawtal | mood …
+  model            String // claude-sonnet-4-6 | claude-haiku-4-5
+  promptTokens     Int     @default(0)
+  completionTokens Int     @default(0)
+  cachedTokens     Int     @default(0) // tokens lus depuis le prompt cache
+  costUsd          Float   @default(0) // coût estimé (USD)
+  durationMs       Int     @default(0)
+  cached           Boolean @default(false) // hit du cache réponse (pas d'appel API)
+  fallback         Boolean @default(false) // a basculé sur le modèle de secours
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([task])
 }
 
 // ── SamaMariage — Sérénité (suivi d'humeur) ────────────────────────────────
