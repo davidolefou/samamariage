@@ -11,26 +11,14 @@ datasource db {
 model User {
   id                String    @id @default(cuid())
   email             String    @unique
-  // Nullable: OAuth-only users (e.g. signed up with Google) never set a
-  // password. Email/password signup still requires it; the auth route
-  // enforces presence at runtime.
   passwordHash      String?
   emailVerifiedAt   DateTime?
   tokenVersion      Int       @default(0)
-  withdrawalPinHash String? // bcrypt hash of withdrawal PIN; null = no PIN set
-  // Optional display name — populated from OAuth profile on first sign-in.
-  // Email/password users can fill it later via /api/auth/me PATCH (future).
+  withdrawalPinHash String?
   name              String?
-  // Optional avatar URL — populated from OAuth profile on first sign-in.
   avatarUrl         String?
-  // App-wide role. USER is the default; ADMIN unlocks /admin back-office;
-  // SUPERADMIN can promote/demote other admins. Bootstrap an initial
-  // SUPERADMIN via `pnpm db:make-superadmin <email>` (see scripts).
-  role              String    @default("USER") // USER | ADMIN | SUPERADMIN
-  // Account status. ACTIVE = login + refresh allowed; SUSPENDED = both
-  // refused with 403 ACCOUNT_SUSPENDED. Mutated via /api/admin/users/[id]/status
-  // (ADMIN can suspend; only SUPERADMIN can restore).
-  status            String    @default("ACTIVE") // ACTIVE | SUSPENDED
+  role              String    @default("USER")
+  status            String    @default("ACTIVE")
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -42,11 +30,9 @@ model User {
   withdrawals       Withdrawal[]
   oauthAccounts     OAuthAccount[]
   adminActions      AdminAction[]
+  wedding           Wedding?
 
-  // Multi-tenancy is opt-in per project: by default no resource is org-scoped.
-  // Apps that need it (marketplace, B2B SaaS, classifieds) wire owner relations
-  // on their domain models.
-  ownedOrganizations Organization[]      @relation("OrgOwner")
+  ownedOrganizations Organization[]       @relation("OrgOwner")
   memberships        OrganizationMember[] @relation("OrgMembership")
 
   @@index([email])
@@ -54,19 +40,6 @@ model User {
   @@index([status])
 }
 
-// ───────────────────────────────────────────────────────────────────────
-// Admin audit log — every back-office mutation is recorded here so we can
-// answer "who did what when" during incidents / compliance reviews.
-//
-// `action` is a free-form dotted string the UI groups by (e.g.
-// "withdrawal.cancel", "user.role_change", "order.refund").
-// `targetType` + `targetId` reference the affected row when applicable.
-// `metadata` carries the diff or extra context as JSON.
-//
-// Retention: not pruned automatically (compliance). If your jurisdiction
-// requires deletion after N years, add a cron in backend/src/index.ts
-// modeled on the WebhookLog purge.
-// ───────────────────────────────────────────────────────────────────────
 model AdminAction {
   id         String   @id @default(cuid())
   actorId    String
@@ -95,14 +68,14 @@ model AdminAction {
 // used as a stable URL segment.
 // ───────────────────────────────────────────────────────────────────────
 model Organization {
-  id        String   @id @default(cuid())
-  slug      String   @unique
+  id        String               @id @default(cuid())
+  slug      String               @unique
   name      String
   ownerId   String
-  owner     User     @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  owner     User                 @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: Restrict)
   members   OrganizationMember[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 
   @@index([ownerId])
 }
@@ -273,21 +246,21 @@ model WebhookLog {
 // at the call site — the schema is currency-agnostic.
 // ───────────────────────────────────────────────────────────────────────
 model Order {
-  id              String    @id @default(cuid())
-  userId          String? // nullable — guest checkout supported
-  user            User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  amount          Int // gross amount, smallest unit
-  currency        String    @default("XOF") // ISO 4217
-  status          String    @default("PENDING") // PENDING | PAID | EXPIRED | FAILED | REFUNDED
-  customerEmail   String?
-  customerPhone   String?
-  customerName    String?
-  metadata        Json? // app-specific fields
+  id            String  @id @default(cuid())
+  userId        String? // nullable — guest checkout supported
+  user          User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  amount        Int // gross amount, smallest unit
+  currency      String  @default("XOF") // ISO 4217
+  status        String  @default("PENDING") // PENDING | PAID | EXPIRED | FAILED | REFUNDED
+  customerEmail String?
+  customerPhone String?
+  customerName  String?
+  metadata      Json? // app-specific fields
 
   // Stripe-grade idempotency. Required header on POST /api/orders; replay
   // with same value returns the original Order row instead of double-charging.
   // Nullable so existing rows pre-migration don't break the @unique constraint.
-  idempotencyKey  String?   @unique
+  idempotencyKey String? @unique
 
   // Provider reference
   provider         String // e.g. "bictorys"
@@ -311,12 +284,12 @@ model Order {
 }
 
 model Withdrawal {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  user        User   @relation(fields: [userId], references: [id], onDelete: Restrict)
   amount      Int // requested amount, smallest unit
-  currency    String   @default("XOF")
-  status      String   @default("PENDING") // PENDING | PROCESSING | COMPLETED | FAILED | CANCELLED
+  currency    String @default("XOF")
+  status      String @default("PENDING") // PENDING | PROCESSING | COMPLETED | FAILED | CANCELLED
   destination Json // { method: "WAVE" | "ORANGE_MONEY" | ..., phone: "+221...", accountName?: "..." }
 
   // Provider reference
@@ -331,4 +304,62 @@ model Withdrawal {
   @@index([userId, requestedAt])
   @@index([status, requestedAt])
   @@index([provider, providerPayoutId])
+}
+
+// ── SamaMariage — domaine métier ───────────────────────────────────────────
+// Profil de mariage collecté à l'onboarding (12 étapes). 1:1 avec User.
+// Les valeurs monétaires (budget) sont en FCFA entier (smallest unit, 0 décimale).
+enum DateMode {
+  PRECISE
+  MONTH
+  UNKNOWN
+}
+
+model Wedding {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 1-2 — Couple
+  fullName        String
+  partnerName     String
+  partnerPronouns String @default("il")
+
+  // 3 — Contact
+  phoneCountry String @default("+221")
+  phone        String @default("")
+
+  // 4 — Date
+  dateMode     DateMode  @default(PRECISE)
+  datePrecise  DateTime?
+  dateMonth    String? // "YYYY-MM"
+  dateInMonths Int       @default(6)
+
+  // 5 — Lieu
+  city      String @default("dakar")
+  cityOther String @default("")
+
+  // 6 — Cérémonies (JSON : { takk, ceet, civil, reception } + dates)
+  ceremonies    Json
+  ceremonyDates Json
+
+  // 7-8 — Échelle
+  guests     Int     @default(450)
+  budget     Int     @default(12000000) // FCFA, 0 décimale
+  budgetSkip Boolean @default(false)
+
+  // 9-12 — Préférences (listes de slugs)
+  priorities         String[]
+  styles             String[]
+  fabric             String   @default("bazin")
+  bridesmaids        Int      @default(12)
+  inspirationSources String[]
+  toAvoid            String   @default("")
+
+  completedOnboarding Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }

@@ -21,3 +21,8 @@ next-env.d.ts
 amp
 node-compile-cache/
 
+# Claude Code local state
+.claude/scheduled_tasks.lock
+
+# Vercel CLI local link (IDs projet/org — ne pas committer)
+.vercel/
