@@ -10,6 +10,7 @@ import { useToast } from '@/contexts/ToastContext';
 export const dynamic = 'force-static';
 
 const PENDING = 'sama:wedding-pending';
+const PENDING_VENDOR = 'sama:vendor-pending';
 
 const ERROR_FR: Record<string, string> = {
   VERIFICATION_CODE_INVALID: 'Code invalide. Vérifie et réessaie.',
@@ -42,6 +43,36 @@ async function flushPendingWedding(): Promise<void> {
   } catch {
     // On garde le payload pour réessayer plus tard ; non bloquant.
   }
+}
+
+// Idem pour un profil prestataire mis de côté par l'onboarding pro.
+async function flushPendingVendor(): Promise<void> {
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(PENDING_VENDOR);
+  } catch {
+    return;
+  }
+  if (!raw) return;
+  let payload: unknown;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    localStorage.removeItem(PENDING_VENDOR);
+    return;
+  }
+  try {
+    await api('/api/vendor', { method: 'PUT', body: payload });
+    localStorage.removeItem(PENDING_VENDOR);
+  } catch {
+    // Non bloquant ; on réessaiera (le profil reste en attente).
+  }
+}
+
+// Redirection post-vérif : seulement un chemin interne (anti open-redirect).
+function safeNext(raw: string | null): string {
+  if (raw && raw.startsWith('/') && !raw.startsWith('//')) return raw;
+  return '/dashboard';
 }
 
 function VerifyEmailBody() {
@@ -78,9 +109,10 @@ function VerifyEmailBody() {
       });
       setDone(true);
       await flushPendingWedding();
+      await flushPendingVendor();
       await refresh();
       toast('Compte vérifié — bienvenue ! 🎉', 'success');
-      setTimeout(() => router.push('/dashboard'), 1400);
+      setTimeout(() => router.push(safeNext(params.get('next'))), 1400);
     } catch (err) {
       const c = err instanceof ApiError ? err.code : '';
       setError(ERROR_FR[c] ?? 'Vérification impossible. Réessaie.');

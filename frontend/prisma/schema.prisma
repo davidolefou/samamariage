@@ -470,6 +470,7 @@ enum VendorCategory {
   DJ
   TENUE
   VOITURE
+  BEAUTE
   ANIM
 }
 
