@@ -3,12 +3,17 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { useUser } from '@/contexts/AuthContext';
 import { useApi, invalidateCache } from '@/lib/useApi';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import AppShell from '@/components/app/AppShell';
 import { useToast } from '@/contexts/ToastContext';
 import { type PlanningResponse, type PlanningTask } from '@/lib/planning';
 
 export const dynamic = 'force-static';
+
+interface SuggestedTask {
+  phase: string;
+  title: string;
+}
 
 function Spinner() {
   return <main className="grid min-h-screen place-items-center bg-bone"><span className="h-6 w-6 animate-spin rounded-full border-2 border-royal-700/30 border-t-royal-700" /></main>;
@@ -21,7 +26,57 @@ function PlanningContent() {
   const progress = data?.progress;
   const [title, setTitle] = useState('');
   const [phase, setPhase] = useState('');
+  const [suggestions, setSuggestions] = useState<SuggestedTask[] | null>(null);
+  const [genBusy, setGenBusy] = useState(false);
+  const [applyBusy, setApplyBusy] = useState(false);
   const reload = () => { invalidateCache('/api/planning'); void refresh(); };
+
+  async function generate() {
+    if (genBusy) return;
+    setGenBusy(true);
+    try {
+      const res = await api<{ ok: boolean; tasks: SuggestedTask[] }>('/api/planning/generate', { method: 'POST', body: {} });
+      setSuggestions(res.tasks);
+      if (!res.tasks.length) toast('Aucune suggestion — ajoute tes tâches à la main', 'info');
+    } catch (err) {
+      const code = err instanceof ApiError ? err.code : '';
+      toast(
+        code === 'AI_NOT_CONFIGURED'
+          ? "L'IA n'est pas encore activée"
+          : code === 'AI_RATE_LIMITED'
+            ? 'Limite IA quotidienne atteinte'
+            : 'Génération impossible',
+        'error',
+      );
+    } finally {
+      setGenBusy(false);
+    }
+  }
+
+  async function applyAll() {
+    if (!suggestions || applyBusy) return;
+    setApplyBusy(true);
+    try {
+      for (const s of suggestions) {
+        await api('/api/planning', { method: 'POST', body: { title: s.title, phase: s.phase } });
+      }
+      toast(`${suggestions.length} tâches ajoutées ✨`, 'success');
+      setSuggestions(null);
+      reload();
+    } catch {
+      toast('Ajout partiel — réessaie', 'error');
+      reload();
+    } finally {
+      setApplyBusy(false);
+    }
+  }
+
+  const suggestionGroups = useMemo(() => {
+    if (!suggestions) return [];
+    const m = new Map<string, SuggestedTask[]>();
+    suggestions.forEach((t) => { if (!m.has(t.phase)) m.set(t.phase, []); m.get(t.phase)!.push(t); });
+    return [...m.entries()];
+  }, [suggestions]);
 
   const groups = useMemo(() => {
     const m = new Map<string, PlanningTask[]>();
@@ -61,6 +116,45 @@ function PlanningContent() {
           <div className="h-full rounded-full bg-gradient-to-r from-royal-700 to-gold-400 transition-[width] duration-700" style={{ width: (progress?.pct ?? 0) + '%' }} />
         </div>
         <div className="mt-1 font-mono text-[11px] text-ink/55">{progress?.done ?? 0} / {progress?.total ?? 0} tâches</div>
+      </section>
+
+      {/* Rétroplanning IA */}
+      <section className="rounded-2xl bg-gradient-to-br from-royal-50 to-gold-50 p-4 ring-1 ring-royal-700/10">
+        {!suggestions ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-royal-700"><span>✨</span> Rétroplanning IA</div>
+              <p className="mt-1 text-[13px] text-ink/65">Sama génère ton planning par phase, de maintenant au jour J.</p>
+            </div>
+            <button onClick={generate} disabled={genBusy} className="inline-flex items-center gap-2 rounded-xl bg-royal-700 px-4 py-2.5 text-sm font-medium text-gold-50 transition hover:bg-royal-800 disabled:opacity-60">
+              {genBusy ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-gold-50/40 border-t-gold-50" /> : '✨'}
+              Générer mon rétroplanning
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="font-mono text-[10px] uppercase tracking-widest text-royal-700">Proposition Sama · {suggestions.length} tâches</div>
+              <button onClick={() => setSuggestions(null)} className="font-mono text-[11px] text-ink/50 hover:text-bordeaux">Annuler</button>
+            </div>
+            <div className="mt-3 max-h-72 space-y-3 overflow-y-auto pr-1">
+              {suggestionGroups.map(([ph, items]) => (
+                <div key={ph}>
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-bordeaux">{ph}</div>
+                  <ul className="mt-1 space-y-1">
+                    {items.map((t, i) => (
+                      <li key={i} className="rounded-lg bg-paper px-3 py-1.5 text-[13px] text-royal-900 ring-1 ring-ink/5">{t.title}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <button onClick={applyAll} disabled={applyBusy} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-royal-700 px-4 py-2.5 text-sm font-medium text-gold-50 transition hover:bg-royal-800 disabled:opacity-60">
+              {applyBusy ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-gold-50/40 border-t-gold-50" /> : '+'}
+              Ajouter ces {suggestions.length} tâches
+            </button>
+          </div>
+        )}
       </section>
 
       <form onSubmit={add} className="grid gap-3 rounded-2xl bg-paper p-4 ring-1 ring-ink/5 sm:grid-cols-[1fr_auto_auto] sm:items-end">
