@@ -170,7 +170,7 @@ function DashboardContent({ wedding }: { wedding: Wedding }) {
           </div>
         </Link>
 
-        <ModuleCard href="/budget" tag="02 / Finances" title="Sama Budget" desc="Le contrôleur de gestion IA. Ventile ton enveloppe, alerte les dépassements." soon onSoon={() => soon('Sama Budget')} />
+        <ModuleCard href="/budget" tag="02 / Finances" title="Sama Budget" desc="Ventile ton enveloppe par poste et suis tes dépenses, alertes de dépassement." />
         <ModuleCard href="/planning" tag="03 / Temps" title="Sama Planning" desc="Rétroplanning intelligent ajusté à ta date et ton style." soon onSoon={() => soon('Sama Planning')} />
         <ModuleCard href="/mood" tag="01 / Inspiration" title="Sama Mood" desc="Le Pinterest IA qui devine ton style et génère ton mood board." soon onSoon={() => soon('Sama Mood')} />
         <ModuleCard href="/prestataires" tag="04 / Carnet" title="Sama Prestataires" desc="Prestataires vérifiés à Dakar, Thiès, Saly. Compare et demande un devis." />
