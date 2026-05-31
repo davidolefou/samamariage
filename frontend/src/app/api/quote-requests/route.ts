@@ -23,6 +23,23 @@ const CreateSchema = z.object({
   message: z.string().max(1000).default(''),
 });
 
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  const ctx = makeRequestContext(req.headers);
+  return withRequestContext(ctx, async () => {
+    const auth = await requireAuth(req.headers.get('authorization'));
+    if (auth instanceof NextResponse) {
+      auth.headers.set('x-request-id', ctx.requestId);
+      return auth;
+    }
+    const rows = await prisma.quoteRequest.findMany({
+      where: { userId: auth.user.sub },
+      orderBy: { createdAt: 'desc' },
+      include: { vendor: { select: { id: true, businessName: true, category: true, coverVariant: true } } },
+    });
+    return NextResponse.json({ ok: true, requests: rows }, { headers: { 'x-request-id': ctx.requestId } });
+  });
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const ctx = makeRequestContext(req.headers);
   return withRequestContext(ctx, async () => {

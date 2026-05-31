@@ -561,3 +561,45 @@ input[type='range'].sama::-moz-range-thumb {
   }
   .confetti { display: none; }
 }
+
+/* ── SamaMariage Pro — couvertures de catégorie (vitrines + marketplace) ── */
+.ph {
+  position: relative;
+  overflow: hidden;
+}
+.ph::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 1.6px);
+  background-size: 10px 10px;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+.cv-photo {
+  background: radial-gradient(120% 100% at 30% 20%, #d4a574 0%, #722f37 60%, #3d181c 100%);
+}
+.cv-food {
+  background: linear-gradient(135deg, #b98548 0%, #722f37 100%);
+}
+.cv-decor {
+  background: radial-gradient(120% 100% at 70% 30%, #1e5631 0%, #0e2916 75%);
+}
+.cv-dj {
+  background: linear-gradient(135deg, #0e2916, #722f37 60%, #d4a574 100%);
+}
+.cv-tenue {
+  background: radial-gradient(120% 100% at 30% 70%, #1b2a4e 0%, #0e1a38 50%, #0e2916 100%);
+}
+.cv-salle {
+  background: linear-gradient(180deg, #722f37 0%, #3d181c 60%, #d4a574 100%);
+}
+.cv-voiture {
+  background: linear-gradient(135deg, #173f24, #0e2916 50%, #b98548 100%);
+}
+.cv-anim {
+  background: radial-gradient(140% 100% at 30% 80%, #722f37 0%, #3d181c 60%, #1e5631 100%);
+}
+.cv-beaute {
+  background: radial-gradient(120% 100% at 70% 30%, #b98548 0%, #722f37 70%);
+}

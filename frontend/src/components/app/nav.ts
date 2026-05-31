@@ -15,7 +15,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/mood', label: 'Sama Mood', icon: 'mood', soon: true },
   { href: '/budget', label: 'Sama Budget', icon: 'budget', soon: true },
   { href: '/planning', label: 'Sama Planning', icon: 'planning', soon: true },
-  { href: '/prestataires', label: 'Sama Prestataires', icon: 'vendors', soon: true },
+  { href: '/prestataires', label: 'Sama Prestataires', icon: 'vendors' },
   { href: '/ndawtal', label: 'Sama Ndawtal', icon: 'ndawtal', badge: 'NEW' },
   { href: '/tenues', label: 'Sama Tenues', icon: 'outfits', soon: true },
   { href: '/invites', label: 'Sama Invités', icon: 'guests' },

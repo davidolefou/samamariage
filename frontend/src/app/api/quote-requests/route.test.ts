@@ -8,7 +8,7 @@ mockNextCookies();
 vi.mock('@/lib/server/middleware', () => ({ requireAuth: vi.fn() }));
 
 import { requireAuth } from '@/lib/server/middleware';
-import { POST } from './route';
+import { GET, POST } from './route';
 
 const mockRequireAuth = vi.mocked(requireAuth);
 const authedCtx = { user: { sub: 'user-1', email: 'bride@x.com' } };
@@ -70,5 +70,25 @@ describe('POST /api/quote-requests', () => {
     const res = await POST(req({ vendorId: 'v1' }));
     expect(res.status).toBe(401);
     expect(prismaMock.quoteRequest.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('GET /api/quote-requests (mes demandes)', () => {
+  it('liste les demandes de la mariée connectée (scope userId)', async () => {
+    prismaMock.quoteRequest.findMany.mockResolvedValue([
+      { id: 'q1', status: 'QUOTED', vendor: { id: 'v1', businessName: 'Studio', category: 'PHOTO', coverVariant: 'cv-photo' } },
+    ] as never);
+    const res = await GET(new NextRequest('http://test/api/quote-requests'));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.requests).toHaveLength(1);
+    expect(prismaMock.quoteRequest.findMany.mock.calls[0]?.[0]?.where).toEqual({ userId: 'user-1' });
+  });
+
+  it('401 si non authentifié', async () => {
+    mockRequireAuth.mockResolvedValueOnce(NextResponse.json({ error: 'no' }, { status: 401 }));
+    const res = await GET(new NextRequest('http://test/api/quote-requests'));
+    expect(res.status).toBe(401);
+    expect(prismaMock.quoteRequest.findMany).not.toHaveBeenCalled();
   });
 });
