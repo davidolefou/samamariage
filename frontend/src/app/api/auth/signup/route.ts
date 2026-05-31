@@ -23,7 +23,7 @@ import { hashPassword, generateVerificationCode } from '@/lib/server/auth';
 import { isBanned } from '@/lib/server/auth/banned-passwords';
 import { isPwned } from '@/lib/server/auth/hibp';
 import { dummyBcryptCompare } from '@/lib/server/auth/dummy-bcrypt';
-import { enqueueOutbox } from '@/lib/server/outbox';
+import { sendVerificationCodeNow } from '@/lib/server/auth/send-auth-email';
 
 const PASSWORD_MIN = Number(process.env.AUTH_PASSWORD_MIN_LENGTH ?? 10);
 const VERIFICATION_TTL_MS = Number(process.env.AUTH_VERIFICATION_TTL_MIN ?? 15) * 60 * 1000;
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       return res;
     }
 
-    // 5. New-user branch — hash + create User + VerificationCode + outbox.
+    // 5. New-user branch — hash + create User + VerificationCode.
     const passwordHash = await hashPassword(password);
     const code = generateVerificationCode();
     const expiresAt = new Date(Date.now() + VERIFICATION_TTL_MS);
@@ -131,15 +131,17 @@ export async function POST(req: NextRequest): Promise<Response> {
           expiresAt,
         },
       });
-      await enqueueOutbox(tx, {
-        kind: 'email.verification_code',
-        payload: {
-          to: email,
-          code,
-          expiresAt: expiresAt.toISOString(),
-        },
-      });
     });
+
+    // 6. Envoi SYNCHRONE du code (best-effort). Un code de vérif doit arriver
+    //    en quelques secondes, pas attendre le cron de drain quotidien (Hobby).
+    //    Compromis assumé : l'appel Resand n'a lieu que dans la branche
+    //    nouvel-email, ce qui ajoute ~quelques centaines de ms vs la branche
+    //    email-existant — un léger signal de timing pour l'énumération, borné
+    //    par le rate-limit signup (5/h par email). Inerte si Resend non
+    //    configuré (l'inscription réussit ; renvoi possible via
+    //    /api/auth/resend-verification une fois Resend posé).
+    await sendVerificationCodeNow({ to: email, code, expiresAt: expiresAt.toISOString() });
 
     log.info('signup new user');
     const res = NextResponse.json({ ok: true }, { status: 201 });

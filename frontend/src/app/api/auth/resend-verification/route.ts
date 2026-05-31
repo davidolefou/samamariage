@@ -25,7 +25,7 @@ import { createEmailLimiter } from '@/lib/server/middleware/rate-limit-by-email'
 import { makeRequestContext, withRequestContext } from '@/lib/server/observability/request-context';
 import { log } from '@/lib/server/observability/log';
 import { generateVerificationCode } from '@/lib/server/auth';
-import { enqueueOutbox } from '@/lib/server/outbox';
+import { sendVerificationCodeNow } from '@/lib/server/auth/send-auth-email';
 
 const VERIFICATION_TTL_MS = Number(process.env.AUTH_VERIFICATION_TTL_MIN ?? 15) * 60 * 1000;
 
@@ -89,24 +89,16 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (user && !user.emailVerifiedAt) {
       const code = generateVerificationCode();
       const expiresAt = new Date(Date.now() + VERIFICATION_TTL_MS);
-      await prisma.$transaction(async (tx) => {
-        await tx.verificationCode.create({
-          data: {
-            userId: user.id,
-            code,
-            type: 'EMAIL_VERIFY',
-            expiresAt,
-          },
-        });
-        await enqueueOutbox(tx, {
-          kind: 'email.verification_code',
-          payload: {
-            to: user.email,
-            code,
-            expiresAt: expiresAt.toISOString(),
-          },
-        });
+      await prisma.verificationCode.create({
+        data: {
+          userId: user.id,
+          code,
+          type: 'EMAIL_VERIFY',
+          expiresAt,
+        },
       });
+      // Envoi synchrone (cf. send-auth-email) — pas d'attente du cron quotidien.
+      await sendVerificationCodeNow({ to: user.email, code, expiresAt: expiresAt.toISOString() });
       log.info('resend-verification: code re-issued', { userId: user.id });
     } else {
       // No user, OR already verified — log without leaking which case it is.

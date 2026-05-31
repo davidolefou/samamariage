@@ -27,15 +27,21 @@ import { makeRequestContext, withRequestContext } from '@/lib/server/observabili
 import { log } from '@/lib/server/observability/log';
 import { generateVerificationCode } from '@/lib/server/auth';
 import { dummyBcryptCompare } from '@/lib/server/auth/dummy-bcrypt';
-import { enqueueOutbox } from '@/lib/server/outbox';
+import { sendPasswordResetNow } from '@/lib/server/auth/send-auth-email';
 
 const VERIFICATION_TTL_MS = Number(process.env.AUTH_VERIFICATION_TTL_MIN ?? 15) * 60 * 1000;
 
-// CR-01 — wall-clock floor for both branches. 350ms covers a cost-12 bcrypt
-// compare worst-case + a single $transaction roundtrip + jitter, so the
-// no-user branch never finishes faster than the user-exists branch even on
-// fast Neon-pooler responses. Override via env if observed P99 differs.
-const TARGET_LATENCY_MS = Number(process.env.AUTH_FORGOT_TARGET_LATENCY_MS ?? 350);
+// CR-01 — wall-clock floor for both branches. Couvre désormais aussi l'envoi
+// SYNCHRONE de l'email (Resend, ~quelques centaines de ms) dans la branche
+// user-exists : le plancher (défaut 1200ms) dépasse bcrypt + $transaction +
+// send, donc la branche no-user (qui ne fait que bcrypt) ne finit jamais plus
+// vite → la résistance à l'énumération par timing est préservée. Override via
+// env si le P99 observé diffère (mettre ~350 si Resend n'est pas configuré).
+// Lu à la requête (pas au chargement du module) pour que l'override d'env
+// s'applique de façon fiable, y compris en test.
+function targetLatencyMs(): number {
+  return Number(process.env.AUTH_FORGOT_TARGET_LATENCY_MS ?? 1200);
+}
 
 const Body = z.object({ email: zEmail });
 
@@ -86,24 +92,18 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (user) {
       const code = generateVerificationCode();
       const expiresAt = new Date(Date.now() + VERIFICATION_TTL_MS);
-      await prisma.$transaction(async (tx) => {
-        await tx.verificationCode.create({
-          data: {
-            userId: user.id,
-            code,
-            type: 'PASSWORD_RESET',
-            expiresAt,
-          },
-        });
-        await enqueueOutbox(tx, {
-          kind: 'email.password_reset',
-          payload: {
-            to: email,
-            code,
-            expiresAt: expiresAt.toISOString(),
-          },
-        });
+      await prisma.verificationCode.create({
+        data: {
+          userId: user.id,
+          code,
+          type: 'PASSWORD_RESET',
+          expiresAt,
+        },
       });
+      // Envoi SYNCHRONE du code (cf. send-auth-email) — pas d'attente du cron
+      // quotidien. Le plancher de latence ci-dessous absorbe le temps d'envoi
+      // pour ne pas trahir la branche.
+      await sendPasswordResetNow({ to: email, code, expiresAt: expiresAt.toISOString() });
       log.info('forgot-password code issued', { userId: user.id });
     } else {
       log.info('forgot-password no-user (enumeration-resist)');
@@ -111,9 +111,10 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     // CR-01 — wall-clock floor: pad to TARGET_LATENCY_MS so residual jitter
     // (Neon cold-start, outbox latency spikes) cannot reveal the branch.
+    const target = targetLatencyMs();
     const elapsed = Date.now() - startedAt;
-    if (elapsed < TARGET_LATENCY_MS) {
-      await new Promise((r) => setTimeout(r, TARGET_LATENCY_MS - elapsed));
+    if (elapsed < target) {
+      await new Promise((r) => setTimeout(r, target - elapsed));
     }
 
     const res = NextResponse.json({ ok: true });
