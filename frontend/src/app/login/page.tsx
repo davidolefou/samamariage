@@ -373,6 +373,14 @@ export default function LoginPage() {
             </Link>
           </div>
 
+          {/* Aiguillage espace prestataire */}
+          <div className="fade-up d4 mt-3 text-center text-[13px] text-ink/55">
+            Vous êtes prestataire ?{' '}
+            <Link href="/pro/login" className="font-semibold text-bordeaux hover:text-bordeaux-900">
+              Espace pro
+            </Link>
+          </div>
+
           {/* Footer confiance */}
           <div className="fade-up d5 mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-widest text-ink/40">
             <span>Conditions</span>
