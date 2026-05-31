@@ -116,6 +116,9 @@ function toVendorPayload(d: Data) {
     priceLabel,
     depositPolicy: '',
     description: [d.tagline.trim(), d.signature.trim()].filter(Boolean).join(' — '),
+    // Intentionnel : l'étape 9 utilise des slots placeholder (booléens), pas de
+    // vraies URLs — c'est un gate visuel. Le vrai upload portfolio (Cloudinary
+    // via /api/upload) est un incrément ultérieur (cf. vitrine P5). Rien à perdre.
     portfolio: [] as string[],
     coverVariant: cover,
     responseTime: RESP_LABEL[d.resp_time] ?? '',
