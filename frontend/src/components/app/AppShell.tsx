@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { NAV_ITEMS, type NavItem } from './nav';
+import SamaCoach from './SamaCoach';
 
 // Icônes SVG par clé (viewBox 0 0 24 24, stroke courant).
 function NavIcon({ name }: { name: string }) {
@@ -250,6 +251,9 @@ export default function AppShell({
 
         <main className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">{children}</main>
       </div>
+
+      {/* Sama Coach — assistante IA flottante, disponible sur tous les modules */}
+      <SamaCoach firstName={firstName} />
     </div>
   );
 }

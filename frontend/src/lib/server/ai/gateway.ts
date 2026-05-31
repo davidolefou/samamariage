@@ -63,7 +63,17 @@ function isRetryable(err: unknown): boolean {
 export interface CompleteInput {
   task: AiTask;
   userId: string;
+  /**
+   * Prompt simple (un seul tour). Ignoré si `messages` est fourni.
+   * Reste requis pour la clé de cache des tâches cacheables.
+   */
   prompt: string;
+  /**
+   * Conversation multi-tours (chat). Quand fourni, remplace `prompt` dans
+   * l'appel modèle. Réservé aux tâches NO_CACHE (le cache réponse ne porte
+   * que sur `prompt`).
+   */
+  messages?: Anthropic.MessageParam[];
   system?: string;
   maxTokens?: number;
   /** Force (ou désactive) le cache réponse ; par défaut selon la tâche. */
@@ -89,7 +99,10 @@ async function callModel(
     ...(input.system
       ? { system: [{ type: 'text', text: input.system, cache_control: { type: 'ephemeral' } }] }
       : {}),
-    messages: [{ role: 'user', content: input.prompt }],
+    messages:
+      input.messages && input.messages.length > 0
+        ? input.messages
+        : [{ role: 'user', content: input.prompt }],
   });
   const text = res.content
     .filter((b): b is Anthropic.TextBlock => b.type === 'text')
