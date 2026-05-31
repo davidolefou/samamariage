@@ -36,6 +36,7 @@ model User {
   outfits           Outfit[]
   bridesmaids       Bridesmaid[]
   budgetCategories  BudgetCategory[]
+  planningTasks     PlanningTask[]
   vendor            Vendor?
   quoteRequests     QuoteRequest[]
   reviews           Review[]
@@ -461,6 +462,24 @@ model Guest {
 
   @@index([userId, rsvp])
   @@index([userId, side])
+}
+
+// ── SamaMariage — Planning (rétroplanning par phase) ───────────────────────
+model PlanningTask {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title   String
+  phase   String    @default("Général") // ex « 12–9 mois avant »
+  dueDate DateTime?
+  done    Boolean   @default(false)
+  sort    Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 // ── SamaMariage — Budget (catégories alloué / dépensé) ─────────────────────
