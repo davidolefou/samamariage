@@ -105,3 +105,29 @@ export async function PUT(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ ok: true, vendor }, { headers: { 'x-request-id': ctx.requestId } });
   });
 }
+
+// DELETE — supprime le profil prestataire de l'utilisateur (zone de danger).
+// Cascade Prisma : demandes, avis, dispos liés sont supprimés avec le Vendor.
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
+  const ctx = makeRequestContext(req.headers);
+  return withRequestContext(ctx, async () => {
+    const csrfFail = verifyCsrf(req);
+    if (csrfFail) {
+      csrfFail.headers.set('x-request-id', ctx.requestId);
+      return csrfFail;
+    }
+    const auth = await requireAuth(req.headers.get('authorization'));
+    if (auth instanceof NextResponse) {
+      auth.headers.set('x-request-id', ctx.requestId);
+      return auth;
+    }
+    const res = await prisma.vendor.deleteMany({ where: { userId: auth.user.sub } });
+    if (res.count === 0) {
+      return NextResponse.json(
+        { error: 'NOT_FOUND', message: 'Aucun profil prestataire.' },
+        { status: 404, headers: { 'x-request-id': ctx.requestId } },
+      );
+    }
+    return NextResponse.json({ ok: true }, { headers: { 'x-request-id': ctx.requestId } });
+  });
+}

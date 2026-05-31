@@ -15,13 +15,13 @@ vi.mock('@/lib/server/middleware', () => ({
 }));
 
 import { requireAuth } from '@/lib/server/middleware';
-import { GET, PUT } from './route';
+import { GET, PUT, DELETE } from './route';
 
 const mockRequireAuth = vi.mocked(requireAuth);
 const authedCtx = { user: { sub: 'user-1', email: 'pro@example.com' } };
 
 function makeReq(
-  method: 'GET' | 'PUT',
+  method: 'GET' | 'PUT' | 'DELETE',
   body?: unknown,
   opts: { csrf?: 'match' | 'missing' } = {},
 ): NextRequest {
@@ -146,5 +146,33 @@ describe('PUT /api/vendor — upsert', () => {
     const res = await PUT(makeReq('PUT', { category: 'PHOTO', businessName: 'X' }));
     expect(res.status).toBe(401);
     expect(prismaMock.vendor.upsert).not.toHaveBeenCalled();
+  });
+});
+
+describe('DELETE /api/vendor — zone de danger', () => {
+  it('supprime le profil du prestataire', async () => {
+    prismaMock.vendor.deleteMany.mockResolvedValue({ count: 1 } as never);
+    const res = await DELETE(makeReq('DELETE'));
+    expect(res.status).toBe(200);
+    expect(prismaMock.vendor.deleteMany.mock.calls[0]?.[0]?.where).toEqual({ userId: 'user-1' });
+  });
+
+  it('404 si aucun profil', async () => {
+    prismaMock.vendor.deleteMany.mockResolvedValue({ count: 0 } as never);
+    const res = await DELETE(makeReq('DELETE'));
+    expect(res.status).toBe(404);
+  });
+
+  it('403 si CSRF manquant — avant requireAuth', async () => {
+    const res = await DELETE(makeReq('DELETE', undefined, { csrf: 'missing' }));
+    expect(res.status).toBe(403);
+    expect(mockRequireAuth).not.toHaveBeenCalled();
+  });
+
+  it('401 si non authentifié', async () => {
+    mockRequireAuth.mockResolvedValueOnce(NextResponse.json({ error: 'no' }, { status: 401 }));
+    const res = await DELETE(makeReq('DELETE'));
+    expect(res.status).toBe(401);
+    expect(prismaMock.vendor.deleteMany).not.toHaveBeenCalled();
   });
 });
