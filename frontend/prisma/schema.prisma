@@ -37,6 +37,7 @@ model User {
   bridesmaids       Bridesmaid[]
   budgetCategories  BudgetCategory[]
   planningTasks     PlanningTask[]
+  moodItems         MoodItem[]
   vendor            Vendor?
   quoteRequests     QuoteRequest[]
   reviews           Review[]
@@ -462,6 +463,20 @@ model Guest {
 
   @@index([userId, rsvp])
   @@index([userId, side])
+}
+
+// ── SamaMariage — Mood board (inspiration) ─────────────────────────────────
+model MoodItem {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  imageUrl String
+  caption  String @default("")
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 // ── SamaMariage — Planning (rétroplanning par phase) ───────────────────────

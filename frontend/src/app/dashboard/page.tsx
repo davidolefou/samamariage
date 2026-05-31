@@ -172,7 +172,7 @@ function DashboardContent({ wedding }: { wedding: Wedding }) {
 
         <ModuleCard href="/budget" tag="02 / Finances" title="Sama Budget" desc="Ventile ton enveloppe par poste et suis tes dépenses, alertes de dépassement." />
         <ModuleCard href="/planning" tag="03 / Temps" title="Sama Planning" desc="Ton rétroplanning par phase, coché au fil des semaines jusqu'au jour J." />
-        <ModuleCard href="/mood" tag="01 / Inspiration" title="Sama Mood" desc="Le Pinterest IA qui devine ton style et génère ton mood board." soon onSoon={() => soon('Sama Mood')} />
+        <ModuleCard href="/mood" tag="01 / Inspiration" title="Sama Mood" desc="Rassemble tes inspirations déco, tenues et ambiances sur un board visuel." />
         <ModuleCard href="/prestataires" tag="04 / Carnet" title="Sama Prestataires" desc="Prestataires vérifiés à Dakar, Thiès, Saly. Compare et demande un devis." />
         <ModuleCard href="/tenues" tag="06 / Style" title="Sama Tenues" desc={`Tes looks par cérémonie + cotisations du groupe ndaxal (${wedding.bridesmaids} amies).`} />
         <ModuleCard href="/invites" tag="07 / Réception" title="Sama Invités" desc={`RSVP, relances WhatsApp et places à table pour tes ${wedding.guests} invités.`} />

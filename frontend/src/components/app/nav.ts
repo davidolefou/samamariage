@@ -12,7 +12,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: "Vue d'ensemble", icon: 'grid' },
-  { href: '/mood', label: 'Sama Mood', icon: 'mood', soon: true },
+  { href: '/mood', label: 'Sama Mood', icon: 'mood' },
   { href: '/budget', label: 'Sama Budget', icon: 'budget' },
   { href: '/planning', label: 'Sama Planning', icon: 'planning' },
   { href: '/prestataires', label: 'Sama Prestataires', icon: 'vendors' },
