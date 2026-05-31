@@ -33,6 +33,7 @@ model User {
   wedding           Wedding?
   ndawtalEntries    NdawtalEntry[]
   guests            Guest[]
+  vendor            Vendor?
 
   ownedOrganizations Organization[]       @relation("OrgOwner")
   memberships        OrganizationMember[] @relation("OrgMembership")
@@ -455,4 +456,64 @@ model Guest {
 
   @@index([userId, rsvp])
   @@index([userId, side])
+}
+
+// ── SamaMariage — Prestataires (portail pro) ───────────────────────────────
+// Un prestataire = un User avec un profil Vendor 1:1 (la présence du profil
+// = « cet utilisateur est un pro »). Réutilise toute l'auth existante.
+// Montants en FCFA entier. Le catalogue mariée affiche les Vendor PUBLISHED.
+enum VendorCategory {
+  PHOTO
+  FOOD
+  DECOR
+  SALLE
+  DJ
+  TENUE
+  VOITURE
+  ANIM
+}
+
+enum VendorStatus {
+  DRAFT // profil en cours de création (onboarding)
+  PENDING_REVIEW // soumis, en attente de vérification Sama
+  PUBLISHED // visible dans le catalogue mariée
+}
+
+model Vendor {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  category     VendorCategory
+  businessName String
+  ownerName    String         @default("")
+  phone        String         @default("")
+  whatsapp     String         @default("")
+  city         String         @default("dakar")
+  serviceAreas String[] // zones desservies
+  services     String[] // prestations proposées
+  capacity     Int            @default(0) // ex : nb d'invités max
+  priceFrom    Int            @default(0) // FCFA, « à partir de »
+  priceLabel   String         @default("")
+  depositPolicy String        @default("")
+  description  String         @default("")
+  portfolio    String[] // URLs images (Cloudinary)
+  coverVariant String         @default("cv-photo")
+  responseTime String         @default("")
+  vacationMode Boolean        @default(false)
+
+  verified    Boolean      @default(false) // posé par un admin Sama
+  rating      Float        @default(0) // dérivé des avis
+  reviewCount Int          @default(0)
+  status      VendorStatus @default(DRAFT)
+
+  // Compte de versement (paiements)
+  payoutMethod  String @default("") // wave | om | bank
+  payoutAccount String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, category])
+  @@index([category])
 }
