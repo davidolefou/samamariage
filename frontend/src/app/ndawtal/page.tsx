@@ -23,6 +23,7 @@ import {
   toEUR,
   fmtDate,
 } from '@/lib/ndawtal';
+import JourJMode from '@/components/ndawtal/JourJMode';
 
 export const dynamic = 'force-static';
 
@@ -223,6 +224,7 @@ function NdawtalContent() {
   const [ccy, setCcy] = useState<Ccy>('XOF');
   const [tab, setTab] = useState<Tab>('list');
   const [search, setSearch] = useState('');
+  const [jourJOpen, setJourJOpen] = useState(false);
 
   const entries = useMemo(() => data?.entries ?? [], [data]);
   const stats = data?.stats;
@@ -288,9 +290,10 @@ function NdawtalContent() {
             ))}
           </div>
           <button
-            onClick={() => toast('Mode jour J — bientôt 🎙️', 'info')}
-            className="rounded-full bg-bordeaux/8 px-4 py-2.5 text-sm font-medium text-bordeaux transition hover:bg-bordeaux/15"
+            onClick={() => setJourJOpen(true)}
+            className="inline-flex items-center gap-2 rounded-full bg-bordeaux/8 px-4 py-2.5 text-sm font-medium text-bordeaux ring-1 ring-bordeaux/20 transition hover:bg-bordeaux/15"
           >
+            <span className="h-1.5 w-1.5 rounded-full bg-bordeaux" />
             Mode jour J
           </button>
         </div>
@@ -396,6 +399,16 @@ function NdawtalContent() {
           </p>
         </div>
       )}
+
+      <JourJMode
+        open={jourJOpen}
+        onClose={(didSave) => {
+          setJourJOpen(false);
+          if (didSave) reload();
+        }}
+        initialTotal={stats?.totalReceived ?? 0}
+        initialCount={stats?.donorCount ?? 0}
+      />
     </div>
   );
 }
