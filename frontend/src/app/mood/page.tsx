@@ -3,12 +3,18 @@
 import { useMemo, useRef, useState } from 'react';
 import { useUser } from '@/contexts/AuthContext';
 import { useApi, invalidateCache } from '@/lib/useApi';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import AppShell from '@/components/app/AppShell';
 import { useToast } from '@/contexts/ToastContext';
 import { type MoodResponse } from '@/lib/mood';
 
 export const dynamic = 'force-static';
+
+interface Concept {
+  theme: string;
+  palette: { name: string; hex: string }[];
+  ideas: string[];
+}
 
 const COOKIE_PREFIX = process.env.NEXT_PUBLIC_COOKIE_PREFIX || 'app';
 function csrf(): string {
@@ -28,7 +34,30 @@ function MoodContent() {
   const items = useMemo(() => data?.items ?? [], [data]);
   const [caption, setCaption] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [concept, setConcept] = useState<Concept | null>(null);
+  const [genBusy, setGenBusy] = useState(false);
   const reload = () => { invalidateCache('/api/mood'); void refresh(); };
+
+  async function suggest() {
+    if (genBusy) return;
+    setGenBusy(true);
+    try {
+      const res = await api<{ ok: boolean; concept: Concept }>('/api/mood/suggest', { method: 'POST', body: {} });
+      setConcept(res.concept);
+    } catch (err) {
+      const code = err instanceof ApiError ? err.code : '';
+      toast(
+        code === 'AI_NOT_CONFIGURED'
+          ? "L'IA n'est pas encore activée"
+          : code === 'AI_RATE_LIMITED'
+            ? 'Limite IA quotidienne atteinte'
+            : 'Génération impossible',
+        'error',
+      );
+    } finally {
+      setGenBusy(false);
+    }
+  }
 
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -76,7 +105,48 @@ function MoodContent() {
           {uploading ? 'Ajout…' : '+ Ajouter une image'}
         </button>
         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPick} />
+        <button onClick={suggest} disabled={genBusy} className="rounded-xl bg-gradient-to-br from-bordeaux to-bordeaux-900 px-4 py-2.5 text-sm font-medium text-gold-50 transition hover:opacity-90 disabled:opacity-60">
+          {genBusy ? 'Sama réfléchit…' : '✨ Idées Sama IA'}
+        </button>
       </section>
+
+      {/* Concept IA */}
+      {concept && (
+        <section className="rounded-2xl bg-gradient-to-br from-royal-50 to-gold-50 p-5 ring-1 ring-royal-700/10">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="font-mono text-[10px] uppercase tracking-widest text-royal-700">Concept Sama · direction artistique</div>
+              <h3 className="mt-1 font-display text-2xl text-royal-900">{concept.theme}</h3>
+            </div>
+            <button onClick={() => setConcept(null)} aria-label="Fermer" className="grid h-8 w-8 place-items-center rounded-full text-ink/40 transition hover:bg-bordeaux/5 hover:text-bordeaux">
+              <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+            </button>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {concept.palette.map((c) => (
+              <div key={c.hex} className="flex items-center gap-2 rounded-full bg-paper py-1 pl-1 pr-3 ring-1 ring-ink/5">
+                <span className="h-6 w-6 rounded-full ring-1 ring-ink/10" style={{ background: c.hex }} />
+                <span className="text-[12px] text-ink/70">{c.name}</span>
+                <span className="font-mono text-[10px] text-ink/40">{c.hex}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-ink/50">Idées — clique pour l’utiliser en légende</div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {concept.ideas.map((idea) => (
+                <button
+                  key={idea}
+                  onClick={() => { setCaption(idea); toast('Légende prête — ajoute une image 🌸', 'info'); }}
+                  className="rounded-full bg-paper px-3 py-1.5 text-[13px] text-royal-900 ring-1 ring-royal-700/15 transition hover:bg-royal-700 hover:text-gold-50"
+                >
+                  {idea}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {items.length === 0 ? (
         <div className="rounded-2xl bg-paper p-10 text-center ring-1 ring-ink/5">
