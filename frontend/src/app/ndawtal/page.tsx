@@ -58,6 +58,13 @@ function StatCard({
   );
 }
 
+interface ParsedNdawtal {
+  donorName: string;
+  amount: number;
+  relationship: NdawtalRelation;
+  type: NdawtalType;
+}
+
 function QuickAdd({ onAdded }: { onAdded: () => void }) {
   const { toast } = useToast();
   const [donorName, setDonorName] = useState('');
@@ -66,6 +73,40 @@ function QuickAdd({ onAdded }: { onAdded: () => void }) {
   const [ceremony, setCeremony] = useState<NdawtalCeremony>('RECEPTION');
   const [type, setType] = useState<NdawtalType>('CASH');
   const [submitting, setSubmitting] = useState(false);
+  const [aiText, setAiText] = useState('');
+  const [aiBusy, setAiBusy] = useState(false);
+
+  async function runParse() {
+    const text = aiText.trim();
+    if (!text || aiBusy) return;
+    setAiBusy(true);
+    try {
+      const res = await api<{ ok: boolean; entry: ParsedNdawtal }>('/api/ndawtal/parse', {
+        method: 'POST',
+        body: { text },
+      });
+      const e = res.entry;
+      setDonorName(e.donorName);
+      if (e.type === 'SERVICE') setAmount('');
+      else if (e.amount > 0) setAmount(String(e.amount));
+      setRelationship(e.relationship);
+      setType(e.type);
+      setAiText('');
+      toast('Champs préremplis par l’IA — vérifie puis enregistre 🪄', 'success');
+    } catch (err) {
+      const code = err instanceof ApiError ? err.code : '';
+      toast(
+        code === 'AI_NOT_CONFIGURED'
+          ? "L'IA n'est pas encore activée"
+          : code === 'AI_RATE_LIMITED'
+            ? 'Limite IA quotidienne atteinte'
+            : "Analyse impossible — saisis à la main",
+        'error',
+      );
+    } finally {
+      setAiBusy(false);
+    }
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -95,6 +136,44 @@ function QuickAdd({ onAdded }: { onAdded: () => void }) {
       <div className="flex items-center justify-between">
         <div className="font-mono text-[11px] uppercase tracking-widest text-bordeaux">Ajout rapide · un don en 5 s</div>
       </div>
+
+      {/* Saisie rapide IA — une phrase → champs préremplis */}
+      <div className="mt-4 rounded-xl bg-gradient-to-br from-royal-50 to-gold-50 p-3 ring-1 ring-royal-700/10">
+        <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-royal-700">
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M18 18l-2.5-2.5M6 18l2.5-2.5M18 6l-2.5 2.5" />
+          </svg>
+          Saisie rapide IA
+        </div>
+        <div className="mt-2 flex gap-2">
+          <input
+            value={aiText}
+            onChange={(e) => setAiText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                void runParse();
+              }
+            }}
+            placeholder="« Tata Awa a donné 50 mille » ou « Cousine Fatou 2 millions »"
+            className="h-11 flex-1 rounded-xl bg-paper px-3.5 text-[15px] outline-none ring-1 ring-ink/10 transition focus:ring-2 focus:ring-royal-700"
+          />
+          <button
+            type="button"
+            onClick={() => void runParse()}
+            disabled={aiBusy || !aiText.trim()}
+            className="inline-flex h-11 items-center gap-1.5 rounded-xl bg-royal-700 px-4 text-sm font-medium text-gold-50 transition hover:bg-royal-800 disabled:opacity-50"
+          >
+            {aiBusy ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-gold-50/40 border-t-gold-50" />
+            ) : (
+              '🪄'
+            )}
+            <span className="hidden sm:inline">Analyser</span>
+          </button>
+        </div>
+      </div>
+
       <div className="mt-4 grid gap-3 md:grid-cols-12">
         <input
           value={donorName}
