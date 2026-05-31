@@ -32,6 +32,7 @@ model User {
   adminActions      AdminAction[]
   wedding           Wedding?
   ndawtalEntries    NdawtalEntry[]
+  guests            Guest[]
 
   ownedOrganizations Organization[]       @relation("OrgOwner")
   memberships        OrganizationMember[] @relation("OrgMembership")
@@ -417,4 +418,41 @@ model NdawtalEntry {
 
   @@index([userId, donationDate])
   @@index([userId, ceremony])
+}
+
+// ── SamaMariage — Invités (RSVP) ───────────────────────────────────────────
+// Chaque entrée = un·e invité·e. `seats` = nombre de couverts réservés
+// (inclut accompagnant·e·s) — sert au traiteur et au plan de table.
+// `side` = côté mariée / marié / commun. `table` = libellé libre de table.
+enum GuestSide {
+  MARIEE
+  MARIE
+  COMMUN
+}
+
+enum RsvpStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+  MAYBE
+}
+
+model Guest {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fullName String
+  phone    String     @default("")
+  side     GuestSide  @default(COMMUN)
+  rsvp     RsvpStatus @default(PENDING)
+  seats    Int        @default(1) // couverts réservés (≥ 1)
+  table    String     @default("") // numéro/nom de table (plan de table simple)
+  notes    String     @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, rsvp])
+  @@index([userId, side])
 }
