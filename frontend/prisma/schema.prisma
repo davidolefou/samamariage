@@ -513,13 +513,30 @@ model Vendor {
   payoutMethod  String @default("") // wave | om | bank
   payoutAccount String @default("")
 
-  quoteRequests QuoteRequest[]
+  quoteRequests     QuoteRequest[]
+  availabilityBlocks AvailabilityBlock[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([status, category])
   @@index([category])
+}
+
+// ── SamaMariage — Disponibilités prestataire (dates bloquées) ──────────────
+// Une réservation confirmée = une QuoteRequest ACCEPTED (pas de modèle séparé).
+// Ce modèle ne stocke que les dates que le pro bloque manuellement.
+model AvailabilityBlock {
+  id       String   @id @default(cuid())
+  vendorId String
+  vendor   Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  date     DateTime // jour bloqué (minuit UTC)
+  note     String   @default("")
+
+  createdAt DateTime @default(now())
+
+  @@unique([vendorId, date])
+  @@index([vendorId])
 }
 
 // ── SamaMariage — Demandes de devis (lead mariée → prestataire) ────────────
