@@ -30,6 +30,8 @@ function NavIcon({ name }: { name: string }) {
       return <svg {...common}><circle cx="9" cy="8" r="3" /><path d="M3 21c0-3.3 2.7-6 6-6s6 2.7 6 6" /><path d="M16 11a3 3 0 0 0 0-6M21 21c0-2.5-1.5-4.6-3.5-5.5" /></svg>;
     case 'serenity':
       return <svg {...common}><path d="M12 21s-7-4-7-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 7-11 11-11 11z" /></svg>;
+    case 'diaspora':
+      return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></svg>;
     default:
       return <svg {...common}><circle cx="12" cy="12" r="8" /></svg>;
   }

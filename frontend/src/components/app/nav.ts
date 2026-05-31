@@ -20,4 +20,5 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/tenues', label: 'Sama Tenues', icon: 'outfits' },
   { href: '/invites', label: 'Sama Invités', icon: 'guests' },
   { href: '/serenite', label: 'Sama Sérénité', icon: 'serenity' },
+  { href: '/diaspora', label: 'Mode Diaspora', icon: 'diaspora', badge: 'NEW' },
 ];
