@@ -142,16 +142,8 @@ async function complete(input: CompleteInput): Promise<CompleteResult> {
   const cacheable = input.cache ?? !NO_CACHE_TASKS.includes(input.task);
   const redis = getRedis();
 
-  // 1. Rate-limit par utilisateur et par jour.
-  if (redis) {
-    const day = new Date().toISOString().slice(0, 10);
-    const rlKey = `ai:rl:${input.userId}:${day}`;
-    const count = await redis.incr(rlKey);
-    if (count === 1) await redis.expire(rlKey, DAY_SECONDS);
-    if (count > dailyLimit()) throw new AiRateLimitError();
-  }
-
-  // 2. Cache réponse.
+  // 1. Cache réponse (un hit ne consomme PAS de crédit : le quota protège le
+  //    coût des vrais appels API, et un hit est gratuit).
   const key = cacheKey(primary, input.system ?? '', input.prompt);
   if (cacheable && redis) {
     const hit = await redis.get<string>(key);
@@ -159,6 +151,16 @@ async function complete(input: CompleteInput): Promise<CompleteResult> {
       void logInteraction({ userId: input.userId, task: input.task, model: primary, cached: true });
       return { text: hit, model: primary, cached: true, fallback: false };
     }
+  }
+
+  // 2. Rate-limit par utilisateur et par jour — décompté uniquement sur un
+  //    cache miss, juste avant l'appel API réel.
+  if (redis) {
+    const day = new Date().toISOString().slice(0, 10);
+    const rlKey = `ai:rl:${input.userId}:${day}`;
+    const count = await redis.incr(rlKey);
+    if (count === 1) await redis.expire(rlKey, DAY_SECONDS);
+    if (count > dailyLimit()) throw new AiRateLimitError();
   }
 
   // 3. Appel modèle + fallback Haiku.

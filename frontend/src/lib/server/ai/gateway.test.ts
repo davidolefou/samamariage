@@ -68,12 +68,13 @@ describe('ai.complete', () => {
     expect(res.model).toBe('claude-haiku-4-5');
   });
 
-  it('cache hit → pas d’appel API', async () => {
+  it('cache hit → pas d’appel API ni de crédit quota consommé', async () => {
     h.redis.get.mockResolvedValue('depuis le cache');
     const res = await ai.complete({ task: 'budget', userId: 'u1', prompt: 'x' });
     expect(res.cached).toBe(true);
     expect(res.text).toBe('depuis le cache');
     expect(h.create).not.toHaveBeenCalled();
+    expect(h.redis.incr).not.toHaveBeenCalled(); // un hit ne décompte pas le quota
   });
 
   it('chat n’est jamais mis en cache (ni lu ni écrit)', async () => {
