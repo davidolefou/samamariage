@@ -43,10 +43,20 @@ export async function PATCH(
         { status: 400, headers: { 'x-request-id': ctx.requestId } },
       );
     }
+    // Construire le patch sans clés `undefined` (exactOptionalPropertyTypes).
+    const data: { receiptSent?: boolean; repaid?: boolean } = {};
+    if (parsed.data.receiptSent !== undefined) data.receiptSent = parsed.data.receiptSent;
+    if (parsed.data.repaid !== undefined) data.repaid = parsed.data.repaid;
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json(
+        { error: 'VALIDATION_FAILED', message: 'Aucun champ à mettre à jour.' },
+        { status: 400, headers: { 'x-request-id': ctx.requestId } },
+      );
+    }
     // Scope à l'utilisateur : updateMany évite de révéler l'existence d'une autre entrée.
     const res = await prisma.ndawtalEntry.updateMany({
       where: { id, userId: auth.user.sub },
-      data: parsed.data,
+      data,
     });
     if (res.count === 0) {
       return NextResponse.json(

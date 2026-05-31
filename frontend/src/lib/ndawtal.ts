@@ -83,7 +83,7 @@ export const TYPE_OPTIONS = (['CASH', 'CADEAU', 'SERVICE'] as NdawtalType[]).map
 export function fmtFCFA(n: number): string {
   return Math.round(n)
     .toLocaleString('fr-FR')
-    .replace(/[  ]/g, ' ');
+    .replace(/[\u202f\u00a0]/g, ' ');
 }
 
 const XOF_PER_EUR = 655.957;
