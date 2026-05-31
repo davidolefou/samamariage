@@ -33,6 +33,8 @@ model User {
   wedding           Wedding?
   ndawtalEntries    NdawtalEntry[]
   guests            Guest[]
+  outfits           Outfit[]
+  bridesmaids       Bridesmaid[]
   vendor            Vendor?
   quoteRequests     QuoteRequest[]
   reviews           Review[]
@@ -458,6 +460,51 @@ model Guest {
 
   @@index([userId, rsvp])
   @@index([userId, side])
+}
+
+// ── SamaMariage — Tenues (looks par cérémonie + ndaxal) ────────────────────
+enum OutfitStatus {
+  IDEA // à choisir
+  CHOSEN // choisie
+  ORDERED // commandée
+  FITTING // essayage
+  READY // confirmée / prête
+}
+
+model Outfit {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  ceremony String       @default("reception") // takk | ceet | reception | autre
+  title    String
+  fabric   String       @default("")
+  cost     Int          @default(0) // FCFA
+  status   OutfitStatus @default(IDEA)
+  notes    String       @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// Une demoiselle d'honneur du groupe ndaxal (mensurations + cotisation).
+model Bridesmaid {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name             String
+  phone            String  @default("")
+  measurementsDone Boolean @default(false)
+  cotisationAmount Int     @default(0) // FCFA
+  cotisationPaid   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 // ── SamaMariage — Prestataires (portail pro) ───────────────────────────────
