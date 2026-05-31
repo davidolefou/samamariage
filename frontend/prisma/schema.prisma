@@ -38,6 +38,7 @@ model User {
   budgetCategories  BudgetCategory[]
   planningTasks     PlanningTask[]
   moodItems         MoodItem[]
+  moodCheckins      MoodCheckin[]
   vendor            Vendor?
   quoteRequests     QuoteRequest[]
   reviews           Review[]
@@ -463,6 +464,20 @@ model Guest {
 
   @@index([userId, rsvp])
   @@index([userId, side])
+}
+
+// ── SamaMariage — Sérénité (suivi d'humeur) ────────────────────────────────
+model MoodCheckin {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  score Int    @default(3) // 1 (stressée) .. 5 (sereine)
+  note  String @default("")
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 // ── SamaMariage — Mood board (inspiration) ─────────────────────────────────
