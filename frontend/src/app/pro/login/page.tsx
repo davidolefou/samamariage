@@ -152,7 +152,7 @@ export default function ProLoginPage() {
           {/* Google */}
           <div className="fade-up d1 mt-7">
             <a
-              href="/api/auth/oauth/google/start"
+              href="/api/auth/oauth/google/start?next=/pro/dashboard"
               className="inline-flex h-[52px] w-full items-center justify-center gap-2.5 rounded-2xl bg-white text-[15px] font-medium text-ink shadow-[inset_0_0_0_1px_rgba(61,61,61,.12)] transition hover:bg-bone"
             >
               <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
