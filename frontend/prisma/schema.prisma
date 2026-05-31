@@ -31,6 +31,7 @@ model User {
   oauthAccounts     OAuthAccount[]
   adminActions      AdminAction[]
   wedding           Wedding?
+  ndawtalEntries    NdawtalEntry[]
 
   ownedOrganizations Organization[]       @relation("OrgOwner")
   memberships        OrganizationMember[] @relation("OrgMembership")
@@ -362,4 +363,58 @@ model Wedding {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+// ── SamaMariage — Ndawtal (dons traditionnels) ─────────────────────────────
+// Chaque entrée = un don reçu (ou une obligation à rendre). Montant en FCFA
+// entier (smallest unit, 0 décimale). Relié à l'utilisateur (1 mariage / user).
+enum NdawtalRelation {
+  TANTE_MARIEE
+  TANTE_MARIE
+  COUSINE
+  AMIE
+  VOISINE
+  FAMILLE_MARIEE
+  FAMILLE_MARIE
+  COLLEGUE
+  AUTRE
+}
+
+enum NdawtalCeremony {
+  TAKK
+  CEET
+  RECEPTION
+  AUTRE
+}
+
+enum NdawtalType {
+  CASH
+  CADEAU
+  SERVICE
+}
+
+model NdawtalEntry {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  donorName    String
+  relationship NdawtalRelation @default(AUTRE)
+  ceremony     NdawtalCeremony @default(RECEPTION)
+  type         NdawtalType     @default(CASH)
+  amount       Int             @default(0) // FCFA entier (0 si SERVICE en nature)
+  donationDate DateTime        @default(now())
+  receiptSent  Boolean         @default(false)
+  notes        String          @default("")
+
+  // Obligation de rendu (réciprocité ndawtal)
+  obligationDate DateTime? // ex: la donatrice se marie en janvier 2027
+  estimatedRepay Int? // montant estimé à rendre (FCFA)
+  repaid         Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, donationDate])
+  @@index([userId, ceremony])
 }
