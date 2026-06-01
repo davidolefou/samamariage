@@ -43,6 +43,7 @@ model User {
   vendor            Vendor?
   quoteRequests     QuoteRequest[]
   reviews           Review[]
+  signalements      Signalement[] @relation("SignalementReporter")
 
   ownedOrganizations Organization[]       @relation("OrgOwner")
   memberships        OrganizationMember[] @relation("OrgMembership")
@@ -738,4 +739,35 @@ model QuoteRequest {
 
   @@index([vendorId, status])
   @@index([userId])
+}
+
+// ── SamaMariage — Signalements (modération) ────────────────────────────────
+// Un utilisateur signale une cible (prestataire, avis, compte, message). Les
+// admins traitent : résolu (action prise) ou classé sans suite.
+enum SignalementStatus {
+  OPEN // à traiter
+  RESOLVED // action prise
+  DISMISSED // classé sans suite
+}
+
+model Signalement {
+  id         String  @id @default(cuid())
+  reporterId String? // l'auteur du signalement (null si auto-modération)
+  reporter   User?   @relation("SignalementReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+
+  targetType  String // Vendor | Review | User | Message
+  targetId    String  @default("") // id de la cible si connu
+  targetLabel String  @default("") // libellé lisible (nom du pro, etc.)
+  severity    String  @default("med") // low | med | high
+  reason      String // motif du signalement
+
+  status       SignalementStatus @default(OPEN)
+  outcome      String            @default("") // ex « Suspendu », « Avis masqué »
+  resolvedById String? // admin qui a traité
+  resolvedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
 }
