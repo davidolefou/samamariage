@@ -99,8 +99,11 @@ export async function uploadBuffer(
     resource_type: 'auto',
   };
   if (_preset) options.upload_preset = _preset;
-  // Surface the validated MIME so transformations/CDN behave sensibly.
-  if (contentType) options.metadata = `mime=${contentType}`;
+  // Surface the validated MIME as free-form CONTEXT metadata. NB : on utilise
+  // `context` (clé=valeur libre, toujours valide) et NON `metadata` — ce
+  // dernier cible des champs de métadonnées STRUCTURÉES prédéfinis dans le
+  // compte ; un champ absent (compte vierge) fait échouer l'upload (502).
+  if (contentType) options.context = `mime=${contentType}`;
 
   const res = await new Promise<UploadApiResponse>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(options, (err, response) => {

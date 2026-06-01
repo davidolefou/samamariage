@@ -41,6 +41,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { verifyCsrf } from '@/lib/server/auth';
 import { requireAuth } from '@/lib/server/middleware';
 import { makeRequestContext, withRequestContext } from '@/lib/server/observability/request-context';
+import { log } from '@/lib/server/observability/log';
 import { prisma } from '@/lib/server/prisma';
 import { StorageNotConfiguredError, uploadBuffer } from '@/lib/server/upload/cloudinary-client';
 import { sanitizeFilename } from '@/lib/server/upload/sanitize-filename';
@@ -154,6 +155,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           { status: 503, headers: { 'x-request-id': ctx.requestId } },
         );
       }
+      log.error('upload failed (Cloudinary)', { err: e instanceof Error ? e.message : String(e) });
       return NextResponse.json(
         { code: 'UPLOAD_FAILED', message: 'Storage write failed' },
         { status: 502, headers: { 'x-request-id': ctx.requestId } },
