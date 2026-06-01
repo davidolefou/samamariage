@@ -619,6 +619,7 @@ enum VendorStatus {
   DRAFT // profil en cours de création (onboarding)
   PENDING_REVIEW // soumis, en attente de vérification Sama
   PUBLISHED // visible dans le catalogue mariée
+  SUSPENDED // suspendu par un admin (retiré du catalogue)
 }
 
 model Vendor {
@@ -645,6 +646,7 @@ model Vendor {
   vacationMode Boolean        @default(false)
 
   verified    Boolean      @default(false) // posé par un admin Sama
+  featured    Boolean      @default(false) // mis en avant par un admin (vedette)
   rating      Float        @default(0) // dérivé des avis
   reviewCount Int          @default(0)
   status      VendorStatus @default(DRAFT)

@@ -11,7 +11,7 @@ export type VendorCategory =
   | 'BEAUTE'
   | 'ANIM';
 
-export type VendorStatus = 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED';
+export type VendorStatus = 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'SUSPENDED';
 
 export interface Vendor {
   id: string;
@@ -64,7 +64,13 @@ export const STATUS_LABELS: Record<VendorStatus, string> = {
   DRAFT: 'Brouillon',
   PENDING_REVIEW: 'En vérification',
   PUBLISHED: 'En ligne',
+  SUSPENDED: 'Suspendu',
 };
+
+/** Le `Vendor` côté admin porte aussi le flag `featured`. */
+export interface AdminVendor extends Vendor {
+  featured: boolean;
+}
 
 /** Couverture visuelle de catégorie (gradient `cv-*` défini en CSS). */
 export function coverForCategory(c: VendorCategory): string {
