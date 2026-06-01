@@ -155,9 +155,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           { status: 503, headers: { 'x-request-id': ctx.requestId } },
         );
       }
-      log.error('upload failed (Cloudinary)', { err: e instanceof Error ? e.message : String(e) });
+      let detail: string;
+      if (e instanceof Error) detail = e.message;
+      else {
+        try {
+          detail = JSON.stringify(e);
+        } catch {
+          detail = String(e);
+        }
+      }
+      log.error('upload failed (Cloudinary)', { err: detail });
       return NextResponse.json(
-        { code: 'UPLOAD_FAILED', message: 'Storage write failed' },
+        { code: 'UPLOAD_FAILED', message: 'Storage write failed', details: detail },
         { status: 502, headers: { 'x-request-id': ctx.requestId } },
       );
     }
